@@ -46,21 +46,67 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 - The dashboard's visual design, especially the central AI visual, is designed together with the owner through concepts. Stage 0's 3D core is a placeholder; do not polish visuals without the owner's direction.
 - The owner's starting idea for the AI visual is a circular frame filled with liquid that splashes when the AI thinks and talks.
 
+## Brand: Night Glass
+
+Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashboard UI. The home page suggests a still night landscape seen through frosted glass: calm, clear and precise.
+
+### Colour and glass
+
+- Night `#07080B` is the home-page ground. Graphite `#141518` is the ground for every other page.
+- All words, numbers and icons are white. Use white at 100% for primary text, 72% for body text and 62% for labels (the minimum). Build hierarchy with weight and opacity, never colour.
+- Home panels use `rgba(16, 18, 24, 0.52)`, `backdrop-filter: blur(22px) saturate(140%)`. Other panels use white at 5% on graphite.
+- Panel edges are white at 10%; inner dividers are white at 8%; add an inset 1 px top highlight in white at 6%.
+- Ice `#7CC9E8` is only a 1–2 px line, 6–8 px dot or chart line; never a fill, text or glow. Use at most one Ice accent per card.
+- Status is a dot plus a white word: white “On time”, amber `#F5A524` “Late”, red `#FF6B6B` “Problem”, hollow “No data”. Losses use a thin red underline and gains a thin mint `#3DDC97` underline.
+- Cards have 16 px radius and 14–18 px padding; buttons have 12 px radius and are 40–44 px high; pills are fully rounded.
+- Primary buttons use white at 10% fill. Secondary buttons use a 1 px white outline at 16%. Button text is white, 13.5 px, weight 500.
+- Tabs and navigation are glass pill groups. The active item has white at 10% fill, with no underline or colour.
+- Tables use white at 8% row dividers; money is right-aligned in Geist Mono.
+- Home uses the owner-supplied landscape image behind glass, graded from 20% black at the top to 80% black at the bottom. If absent, use the plain Night ground. Do not source an image.
+- Other pages use one shared dusk style: the same owner-supplied photo, blurred 26 px at 42% opacity, fading to Graphite by 640 px from the top. If absent, use the plain Graphite ground.
+- Dashboards should fit one screen without scrolling. Use 14–24 px page padding and 12 px between panels.
+
+### Type and copy
+
+- Use Geist for reading and Geist Mono for labels, times and small numbers, loaded from Google Fonts.
+- Display: 56–64 px, weight 300. Key numbers: 28–38 px, weight 300–400. Page titles: 32 px, weight 400. Headings: 22 px, weight 500. Card titles: 15–16 px, weight 600. Body: 14 px, weight 400, 72% white. Labels: Geist Mono, 11 px, capitals, 1.2 px letter spacing, 62% white.
+- Use sentence case for headings and buttons; capitals only for mono labels. Use tabular figures for changing numbers. Big numbers are light; titles are semibold; leave space around both. Text is never coloured.
+- Use plain, short sentences. Label every number. Never invent figures.
+- Empty values are “—” or plain text such as “Nothing recorded yet” or “No data”. Never show `NULL`, `NaN`, `undefined` or made-up values.
+
+### Components, motion and identity
+
+- Buttons, cards, tables, tags, status dots, drawers and the page shell must follow Night Glass.
+- Keyboard focus is a 2 px Ice outline with a 2 px offset. Respect reduced-motion settings everywhere, including the 3D scene.
+- The lockup is the owner-supplied DDG loop mark, “DDG” in Geist 600, a thin divider, then “Omni” in Geist 300 at 78% white. Until the mark is available, show only the text lockup. Never draw or invent a logo.
+- Do not use glows, text glow, RGB glitch effects, magenta offsets, gradient fills, coloured text or coloured panels. Never put more than one accent colour in a card, put a busy photo behind text without glass, or show a sharp full photo outside the home page. The owner-supplied glitch mark is the one deliberate exception: glitch is allowed in that logo image only, with no added effects.
+- Stage 0's 3D core is a plain placeholder: white and glass only; white or frosted nodes; white hairline links; white Geist labels; each node has a hollow dot and “No data”. No glow, bloom or coloured lighting. Do not polish it before the owner reviews concepts.
+
+### Owner-supplied brand assets
+
+- Keep the asset location at `artifacts/dashboard/public/brand/`. The owner supplies exactly these named assets: `ddg-loader.mp4`, `ddg-mark-glitch.png`, and `night-glass-landscape.jpg`. Never source, generate, redraw, or substitute them. The `brand/README.md` file names the drop location and exact filenames.
+- Check for assets at runtime so they begin working as soon as the owner adds them, without a code change. Missing or failed assets must fall back cleanly: no intro, a text-only lockup, and plain Night/Graphite page grounds.
+- `ddg-loader.mp4` is the silent five-second 1920 × 1080 intro. Show it fullscreen on Night, muted, inline, without controls, while the app loads behind it. Play once per browser session; any click or key skips immediately; reduced-motion users skip it. Fade out over about 400 ms when it ends. Missing files, load errors, and blocked autoplay skip without an error screen or a prolonged blank.
+- `ddg-mark-glitch.png` is the owner's chosen glitch version of the DDG loop mark, a deliberate exception to the glitch ban for the logo image only. Use it unchanged in the header lockup and larger on sign-in; never recolour, crop into the artwork, stretch, rotate, or add effects. Keep it at least 28 px at small sizes. Its black background may be blended with `mix-blend-mode: screen` so it does not appear as a box. If missing, use the text lockup.
+- `night-glass-landscape.jpg` is the Night Glass photo. Use it sharp on home behind the prescribed glass panels and grading; use the shared dusk treatment on every other page. Serve the original as a responsive cover image without distortion; the supplied JPEG should be web-optimized for a 1920 × 1080 dashboard. Do not show a sharp full photo outside home.
+- Stage 0 asset gate: with all three files present, a fresh browser session plays the intro once and then shows sign-in; a key press skips it; the header shows the supplied mark; home shows the photo behind glass; and another page shows dusk. With files absent, the dashboard still opens cleanly.
+
 ## Run and operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server.
-- `pnpm --filter @workspace/dashboard run dev` — run the dashboard.
-- `pnpm run typecheck` — typecheck workspace packages.
-- `pnpm --filter @workspace/db run push` — apply the Drizzle schema to the development database only.
+- Current scaffold preview: `pnpm --filter @workspace/dashboard run dev`.
+- The Python commands below are targets, not runnable yet; use them after the Stage 0 backend package exists.
+- `cd backend && uv run uvicorn omni.main:app --host 0.0.0.0 --port "$PORT"` — run the Python API and, when built, serve the dashboard.
+- `cd backend && uv run pytest` — run Python tests.
+- `cd backend && uv run ruff check . && uv run pyright` — lint and typecheck the Python backend.
 - PostgreSQL connection settings are provided by the environment; never copy credentials into files.
 
-## Stack and source of truth
+## Target stack and source of truth
 
-- pnpm workspace, Node.js 24, TypeScript 5.9.
-- API: Express 5. Database: PostgreSQL and Drizzle ORM.
-- Dashboard: React and Vite.
-- Universal data model: `lib/db/src/schema/`.
-- API routes: `artifacts/api-server/src/routes/`.
+- Back end: one Python 3.12 project in `backend/`, managed by uv, using FastAPI, Pydantic v2, SQLAlchemy 2, psycopg 3, Alembic, pgvector, GeoAlchemy2, argon2, pytest, ruff and pyright.
+- Dashboard: React and Vite in `artifacts/dashboard/`, written in TypeScript.
+- Universal data model: one YAML schema in `backend/`, from which runtime tables are built.
+- API routes and sessions: `backend/omni/api/`.
 - Dashboard: `artifacts/dashboard/`.
-- Model gateway: its own workspace package; only that package knows provider/model identifiers.
-- Sector packs: pack configuration files; the dashboard consumes labels from the API.
+- Model gateway: `backend/omni/gateway/`; only this package may name or call model providers.
+- Sector packs: YAML files in `backend/omni/packs/`; the dashboard consumes labels from the API.
+- Do not keep a second API or database implementation. Remove the template Express, Drizzle and Zod libraries after the Python API replaces them, except for the minimum Replit tooling requires.
