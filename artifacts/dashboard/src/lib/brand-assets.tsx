@@ -115,6 +115,9 @@ export function IntroLoader({ markUrl }: { markUrl: string | null }) {
   const [phase, setPhase] = useState<IntroPhase>(
     shouldShowIntro() ? 'checking' : 'done',
   );
+  const [videoSource] = useState(
+    () => `${brandAssetUrl('ddg-loader.mp4')}?asset-check=${Date.now()}`,
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const markPlayed = () => {
@@ -141,14 +144,22 @@ export function IntroLoader({ markUrl }: { markUrl: string | null }) {
       () => skip(phase === 'playing'),
       phase === 'checking' ? 2400 : 8000,
     );
+    const motionPreference = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    );
     const skipOnInput = () => skip();
+    const skipForMotion = () => {
+      if (motionPreference.matches) skip();
+    };
     window.addEventListener('pointerdown', skipOnInput);
     window.addEventListener('keydown', skipOnInput);
+    motionPreference.addEventListener('change', skipForMotion);
 
     return () => {
       window.clearTimeout(fallbackTimer);
       window.removeEventListener('pointerdown', skipOnInput);
       window.removeEventListener('keydown', skipOnInput);
+      motionPreference.removeEventListener('change', skipForMotion);
     };
   }, [phase]);
 
@@ -175,7 +186,7 @@ export function IntroLoader({ markUrl }: { markUrl: string | null }) {
       <video
         ref={videoRef}
         className="intro-video"
-        src={brandAssetUrl('ddg-loader.mp4')}
+        src={videoSource}
         autoPlay
         muted
         playsInline

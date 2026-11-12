@@ -1,27 +1,27 @@
 kind = "web"
 previewPath = "/"
-title = "Dashboard"
-description = "A blank web dashboard starter with a simple navigation shell, ready to customize."
+title = "Omni Dashboard"
+description = "Omni is a DDG dashboard for synthetic, source-linked organisational data and advise-only specialist workspaces."
 version = "1.0.0"
 id = "artifacts/dashboard"
 router = "path"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = ["/", "/api"]
 localPort = 23183
 
 [services.development]
-run = "pnpm --filter @workspace/dashboard run dev"
+run = "bash ../../scripts/dev.sh"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/dashboard", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/dashboard/dist/public"
+build = ["bash", "../../scripts/build-project.sh"]
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.run]
+args = ["bash", "../../scripts/serve-project.sh"]
+
+[services.production.health.startup]
+path = "/api/health"
 
 [services.env]
 PORT = "23183"

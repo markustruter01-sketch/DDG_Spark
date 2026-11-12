@@ -3,3 +3,11 @@
 
 # No need to store the pnpm store twice.
 .local
+
+# Python build and test outputs
+backend/.venv
+backend/.pytest_cache
+backend/.ruff_cache
+backend/.pyright
+backend/**/__pycache__
+backend/openapi.generated.json

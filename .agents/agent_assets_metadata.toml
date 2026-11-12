@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "uXXv9L7MU9z2Ql2mqtcKZ"
+uri = "file://STAGE_0_REPORT.md"
+type = "text"
+title = "Omni Stage 0 report"
+description = "Completion status, gate commands, outputs, and remaining verification limits."
+logical_id = "eec0fc2d-2aa1-4ad3-bf53-30b25c6a9a47"
+content_hash = "sha256:5e54174e2e25438bb665f63a906deb3125982e42a80b77ba75e6c6c2ea278a84"
+size = 15343
+mtime_ms = 1794525006397
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:f1049b8f-477a-4f2f-b7e7-01fafbab48dd/eec0fc2d-2aa1-4ad3-bf53-30b25c6a9a47/aea44b1d-6829-4bfe-9ab6-e60a32bc0630"
+storage_version_token = "1794525036515081"
+content_type = "text/markdown"

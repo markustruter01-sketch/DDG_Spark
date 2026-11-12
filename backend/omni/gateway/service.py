@@ -1,0 +1,237 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+from typing import Any, Protocol
+
+from omni.gateway.config import GatewayConfig, ModelConfig, load_config
+from omni.gateway.contracts import (
+    Completion,
+    ExtractionResponse,
+    ModelAdapter,
+    ModelDescription,
+    ToolResponse,
+)
+from omni.gateway.mock import MockAdapter
+from omni.gateway.router import RouteDecision, RouteRequest, route_request
+from omni.gateway.spend import MemorySpendLedger, SpendLedger, call_cost
+
+
+class EgressRecorder(Protocol):
+    def append(
+        self,
+        *,
+        model_id: str,
+        what_sent: dict[str, Any],
+        reason: str,
+        cost_usd: Decimal,
+        tokens_in: int,
+        tokens_out: int,
+    ) -> None: ...
+
+
+class MemoryEgressRecorder:
+    def __init__(self) -> None:
+        self.entries: list[dict[str, Any]] = []
+
+    def append(
+        self,
+        *,
+        model_id: str,
+        what_sent: dict[str, Any],
+        reason: str,
+        cost_usd: Decimal,
+        tokens_in: int,
+        tokens_out: int,
+    ) -> None:
+        self.entries.append(
+            {
+                "model_id": model_id,
+                "what_sent": what_sent,
+                "reason": reason,
+                "cost_usd": cost_usd,
+                "tokens_in": tokens_in,
+                "tokens_out": tokens_out,
+            }
+        )
+
+
+@dataclass(frozen=True)
+class GatewayResult:
+    decision: RouteDecision
+    completion: Completion
+    cost_usd: Decimal
+
+
+class ModelGateway:
+    def __init__(
+        self,
+        config: GatewayConfig | None = None,
+        adapters: dict[str, ModelAdapter] | None = None,
+        spend_ledger: SpendLedger | None = None,
+        egress_recorder: EgressRecorder | None = None,
+    ) -> None:
+        self.config = config or load_config()
+        self.adapters: dict[str, ModelAdapter] = adapters or {
+            model.model_id: MockAdapter(
+                ModelDescription(
+                    name=model.model_id,
+                    provider=model.provider,
+                    context_size=model.context_size,
+                    supports_tools=model.supports_tools,
+                    runs_locally=model.runs_locally,
+                )
+            )
+            for model in self.config.models.values()
+        }
+        missing = {
+            model.model_id
+            for model in self.config.models.values()
+            if model.model_id not in self.adapters
+        }
+        if missing:
+            raise ValueError(
+                f"No adapter registered for configured model IDs: {missing}"
+            )
+        self.spend_ledger = spend_ledger or MemorySpendLedger()
+        self.egress_recorder = egress_recorder or MemoryEgressRecorder()
+
+    def route(self, request: RouteRequest, today: date) -> RouteDecision:
+        return route_request(self.config, request, self.spend_ledger, today)
+
+    def run(
+        self,
+        request: RouteRequest,
+        messages: list[dict[str, str]],
+        today: date | None = None,
+    ) -> GatewayResult:
+        call_day = today or date.today()
+        decision = self.route(request, call_day)
+        adapter = self.adapters[decision.model.model_id]
+        completion = adapter.complete(messages)
+        cost = call_cost(
+            completion.tokens_in,
+            completion.tokens_out,
+            decision.model.price_input_per_million,
+            decision.model.price_output_per_million,
+        )
+        self.spend_ledger.record(decision.model.model_id, call_day, cost)
+        self.egress_recorder.append(
+            model_id=decision.model.model_id,
+            what_sent={"operation": "complete", "messages": messages},
+            reason=decision.reason,
+            cost_usd=cost,
+            tokens_in=completion.tokens_in,
+            tokens_out=completion.tokens_out,
+        )
+        return GatewayResult(decision=decision, completion=completion, cost_usd=cost)
+
+    def run_tools(
+        self,
+        request: RouteRequest,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, Any]],
+        today: date | None = None,
+    ) -> tuple[RouteDecision, ToolResponse, Decimal]:
+        call_day = today or date.today()
+        decision = self.route(request, call_day)
+        response = self.adapters[decision.model.model_id].call_tools(messages, tools)
+        cost = self._record(
+            decision,
+            call_day,
+            {"operation": "call_tools", "messages": messages, "tools": tools},
+            response.tokens_in,
+            response.tokens_out,
+        )
+        return decision, response, cost
+
+    def run_extract(
+        self,
+        request: RouteRequest,
+        document: str,
+        form: dict[str, Any],
+        today: date | None = None,
+    ) -> tuple[RouteDecision, ExtractionResponse, Decimal]:
+        call_day = today or date.today()
+        decision = self.route(request, call_day)
+        response = self.adapters[decision.model.model_id].extract(document, form)
+        cost = self._record(
+            decision,
+            call_day,
+            {"operation": "extract", "document": document, "form": form},
+            response.tokens_in,
+            response.tokens_out,
+        )
+        return decision, response, cost
+
+    def _record(
+        self,
+        decision: RouteDecision,
+        day: date,
+        what_sent: dict[str, Any],
+        tokens_in: int,
+        tokens_out: int,
+    ) -> Decimal:
+        cost = call_cost(
+            tokens_in,
+            tokens_out,
+            decision.model.price_input_per_million,
+            decision.model.price_output_per_million,
+        )
+        self.spend_ledger.record(decision.model.model_id, day, cost)
+        self.egress_recorder.append(
+            model_id=decision.model.model_id,
+            what_sent=what_sent,
+            reason=decision.reason,
+            cost_usd=cost,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+        )
+        return cost
+
+    def model_status(self, today: date | None = None) -> dict[str, Any]:
+        report_day = today or date.today()
+        tiers: dict[str, Any] = {}
+        for tier_name, tier in self.config.tiers.items():
+            tier_status: dict[str, Any] = {
+                "model": self.config.models[tier.default].model_id,
+            }
+            if tier.escalation:
+                tier_status["escalation_model"] = self.config.models[
+                    tier.escalation
+                ].model_id
+            tiers[tier_name] = tier_status
+        spend = {
+            model.model_id: str(
+                self.spend_ledger.total_for_model(model.model_id, report_day)
+            )
+            for model in self.config.models.values()
+        }
+        return {
+            "tiers": tiers,
+            "daily_spend_usd": spend,
+            "daily_escalation_budget_usd": (
+                self.config.router.daily_escalation_budget_usd
+            ),
+        }
+
+    def health(self) -> dict[str, Any]:
+        adapter_names = sorted(
+            {adapter.describe().name for adapter in self.adapters.values()}
+        )
+        return {"status": "ok", "adapter_count": len(adapter_names)}
+
+
+def build_mock_gateway() -> ModelGateway:
+    return ModelGateway()
+
+
+def model_description(model: ModelConfig) -> ModelDescription:
+    return ModelDescription(
+        name=model.model_id,
+        provider=model.provider,
+        context_size=model.context_size,
+        supports_tools=model.supports_tools,
+        runs_locally=model.runs_locally,
+    )

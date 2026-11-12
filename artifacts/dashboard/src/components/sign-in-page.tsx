@@ -1,52 +1,41 @@
 import { type FormEvent, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  getSessionInfoApiAuthSessionGetQueryKey,
+  useSignInApiAuthSignInPost,
+} from '@workspace/api-client-react';
 import { BrandLockup } from '@/lib/brand-assets';
+import { useLocation } from 'wouter';
 
 type SignInPageProps = {
   markUrl: string | null;
   landscapeAvailable: boolean;
-  checkingSession: boolean;
-  onSignedIn: () => void;
 };
 
-export default function SignInPage({
-  markUrl,
-  landscapeAvailable,
-  checkingSession,
-  onSignedIn,
-}: SignInPageProps) {
+export default function SignInPage({ markUrl, landscapeAvailable }: SignInPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const signIn = useSignInApiAuthSignInPost({ request: { credentials: 'same-origin' } });
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
-    setSubmitting(true);
-
-    try {
-      const response = await fetch('/api/auth/sign-in', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        setError(
-          response.status === 401
-            ? 'Email or password is incorrect.'
-            : 'Sign-in is unavailable right now.',
-        );
-        return;
-      }
-
-      onSignedIn();
-    } catch {
-      setError('Sign-in is unavailable right now.');
-    } finally {
-      setSubmitting(false);
-    }
+    signIn.mutate(
+      { data: { email: email.trim(), password } },
+      {
+        onSuccess: (session) => {
+          queryClient.setQueryData(getSessionInfoApiAuthSessionGetQueryKey(), session);
+          setLocation('/');
+        },
+        onError: (cause) => {
+          const status = (cause as { status?: number }).status;
+          setError(status === 401 ? 'Email or password is incorrect.' : 'Sign-in is unavailable right now.');
+        },
+      },
+    );
   };
 
   return (
@@ -55,14 +44,9 @@ export default function SignInPage({
       data-testid="page-sign-in"
     >
       <section className="sign-in-card" aria-labelledby="sign-in-title">
-        <BrandLockup
-          markUrl={markUrl}
-          className="sign-in-brand"
-          large
-        />
+        <BrandLockup markUrl={markUrl} className="sign-in-brand" large />
         <h1 id="sign-in-title">Sign in</h1>
         <p className="sign-in-intro">Use your account to continue.</p>
-
         <form className="sign-in-form" onSubmit={submit}>
           <label htmlFor="sign-in-email">Email</label>
           <input
@@ -87,16 +71,16 @@ export default function SignInPage({
           {error && (
             <p className="sign-in-error" role="alert" data-testid="sign-in-error">
               <span className="status-dot status-dot-problem" aria-hidden="true" />
-              {error}
+              Problem: {error}
             </p>
           )}
           <button
-            className="button-primary sign-in-submit"
+            className="sign-in-submit"
             type="submit"
-            disabled={checkingSession || submitting}
+            disabled={signIn.isPending}
             data-testid="button-sign-in"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {signIn.isPending ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </section>

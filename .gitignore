@@ -53,3 +53,11 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Python build, test, and type-check outputs
+backend/.venv/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.pyright/
+backend/**/__pycache__/
+backend/openapi.generated.json

@@ -1,10 +1,4 @@
-import {
-  type CSSProperties,
-  type FormEvent,
-  type ReactNode,
-  useEffect,
-  useState,
-} from 'react';
+import { lazy, Suspense, type CSSProperties, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -15,273 +9,296 @@ import {
   IntroLoader,
   useBrandAssets,
 } from '@/lib/brand-assets';
-import NotFound from '@/pages/not-found';
 import {
-  ArrowDown, ArrowRight, ArrowUpRight, Bell, BookOpen, Check,
-  ChevronDown, CircleHelp, Command, FilePlus2, FolderKanban, Grid2X2,
-  Layers3, LifeBuoy, Plus, Search, Settings2, Sparkles, X,
-} from 'lucide-react';
+  getHealthApiHealthGetQueryKey,
+  getModelsApiModelsGetQueryKey,
+  getPackApiPackGetQueryKey,
+  getSessionInfoApiAuthSessionGetQueryKey,
+  useHealthApiHealthGet,
+  useModelsApiModelsGet,
+  usePackApiPackGet,
+  useSessionInfoApiAuthSessionGet,
+} from '@workspace/api-client-react';
+import { ArrowRight, ChevronDown, CircleHelp, Grid2X2, Settings2 } from 'lucide-react';
 import {
+  Link,
+  Redirect,
   Route,
   Switch,
   useLocation,
+  useRoute,
   Router as WouterRouter,
 } from 'wouter';
 
-const queryClient = new QueryClient();
+const StageZeroCore = lazy(() => import('@/components/stage-zero-core'));
 
-function Home({
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false },
+  },
+});
+
+function LoadingScreen() {
+  return (
+    <main className="page-graphite page-state" aria-label="Loading">
+      <div className="sign-in-card sign-in-skeleton">
+        <div className="skeleton-block" />
+        <div className="skeleton-block" />
+        <div className="skeleton-block" />
+      </div>
+    </main>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <section className="glass-panel error-card" role="alert">
+      <h2>Unable to load this page</h2>
+      <p>{message}</p>
+      <button className="button-secondary" type="button" onClick={onRetry} data-testid="button-retry">
+        Try again
+      </button>
+    </section>
+  );
+}
+
+function WorkspaceShell({
+  children,
   markUrl,
   landscapeAvailable,
+  activePath,
+  email,
 }: {
+  children: ReactNode;
   markUrl: string | null;
   landscapeAvailable: boolean;
+  activePath: string;
+  email: string;
 }) {
-  const [dialog, setDialog] = useState<'create' | 'search' | 'settings' | 'help' | null>(null);
-  const [viewTitle, setViewTitle] = useState('');
-  const [viewDescription, setViewDescription] = useState('');
-  const [createdView, setCreatedView] = useState<{ title: string; description: string } | null>(null);
-  const [workspaceName, setWorkspaceName] = useState('Omni');
-  const [search, setSearch] = useState('');
-  const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setDialog('search');
-      }
-      if (event.key === 'Escape') setDialog(null);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(''), 2600);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
-  const openCreate = () => {
-    setViewTitle('');
-    setViewDescription('');
-    setDialog('create');
-  };
-  const saveView = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!viewTitle.trim()) return;
-    setCreatedView({ title: viewTitle.trim(), description: viewDescription.trim() || 'Your workspace, your starting point.' });
-    setDialog(null);
-    setToast('Your first view is ready to shape.');
-  };
-  const notifyComingSoon = (feature: string) => setToast(`${feature} is ready when you are.`);
-  const searchItems = ['Create a view', 'Workspace preferences', 'Getting started guide'].filter((item) =>
-    item.toLowerCase().includes(search.toLowerCase()),
-  );
-
   return (
-    <div className={`workspace ${landscapeAvailable ? 'has-landscape' : ''}`}>
+    <div
+      className={`workspace ${activePath === '/' ? 'workspace-home' : 'page-graphite'} ${landscapeAvailable ? 'has-landscape' : ''}`}
+    >
       <aside className="side-rail">
-        <BrandLockup markUrl={markUrl} className="brand" />
-        <button className="workspace-switcher" type="button" onClick={() => setDialog('settings')} data-testid="button-workspace-menu">
+        <Link className="rail-brand" href="/" aria-label="Omni home" data-testid="link-home-brand">
+          <BrandLockup markUrl={markUrl} />
+        </Link>
+        <div className="workspace-switcher" aria-label="Current workspace">
           <span className="workspace-avatar">DDG</span>
-          <span className="workspace-meta"><strong>{workspaceName}</strong><span>Workspace</span></span>
-          <ChevronDown size={14} />
-        </button>
+          <span className="workspace-meta"><strong>Omni</strong><span>Stage 0</span></span>
+          <ChevronDown size={14} aria-hidden="true" />
+        </div>
         <div className="section-label">Workspace</div>
-        <nav aria-label="Workspace navigation">
-          <button className="nav-item active" type="button" onClick={() => setCreatedView(null)} data-testid="nav-dashboard">
-            <Grid2X2 size={15} /> <span>Overview</span>
-          </button>
-          <button className="nav-item" type="button" onClick={openCreate} data-testid="nav-views">
-            <Layers3 size={15} /> <span>Views</span>
-          </button>
-          <button className="nav-item" type="button" onClick={() => notifyComingSoon('Your projects')} data-testid="nav-projects">
-            <FolderKanban size={15} /> <span>Projects</span>
-          </button>
+        <nav className="rail-nav" aria-label="Main navigation">
+          <Link className={`nav-item ${activePath === '/' ? 'active' : ''}`} href="/" data-testid="link-overview">
+            <Grid2X2 size={15} aria-hidden="true" /><span>Overview</span>
+          </Link>
+          <Link className={`nav-item ${activePath === '/settings' ? 'active' : ''}`} href="/settings" data-testid="link-settings">
+            <Settings2 size={15} aria-hidden="true" /><span>Settings</span>
+          </Link>
         </nav>
-        <div className="section-label">Your space</div>
-        <button className="nav-item" type="button" onClick={openCreate} data-testid="button-add-view">
-          <Plus size={15} /> <span>Add a view</span>
-        </button>
         <div className="side-spacer" />
-        <button className="nav-item" type="button" onClick={() => setDialog('help')} data-testid="nav-help">
-          <LifeBuoy size={15} /> <span>Help &amp; notes</span>
-        </button>
         <div className="rail-divider" />
         <div className="profile-row">
-          <span className="profile-avatar">Y</span>
-          <span className="profile-copy">Account<small><span className="status-dot status-dot-on-time" aria-hidden="true" />Signed in</small></span>
-          <button className="icon-button" aria-label="Open workspace settings" type="button" onClick={() => setDialog('settings')} data-testid="button-settings">
-            <Settings2 size={15} />
-          </button>
+          <span className="user-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
+          <span className="profile-copy" data-testid="text-signed-in-account">
+            {email}<small>Signed in</small>
+          </span>
+          <span className="icon-button" aria-hidden="true"><CircleHelp size={15} /></span>
         </div>
       </aside>
-
       <main className="main-area">
         <header className="topbar">
-          <div className="crumbs"><span>{workspaceName}</span><ArrowRight size={12} /><strong>Overview</strong></div>
-          <div className="top-actions">
-            <button className="search-trigger" type="button" onClick={() => setDialog('search')} data-testid="button-search">
-              <Search size={14} /><span>Search workspace</span><kbd>⌘ K</kbd>
-            </button>
-            <button className="icon-button" aria-label="Open help" type="button" onClick={() => setDialog('help')} data-testid="button-help">
-              <CircleHelp size={16} />
-            </button>
-          </div>
+          <div className="crumbs"><span>Omni</span><ArrowRight size={12} aria-hidden="true" /><strong>{activePath === '/' ? 'Overview' : activePath === '/settings' ? 'Settings' : 'Workspace'}</strong></div>
+          <div className="top-actions"><span className="top-account" title={email}>{email}</span></div>
         </header>
-
-        <section className="content">
-          <div className="welcome-row">
-            <div>
-              <div className="eyebrow">Omni</div>
-              <h1 className="welcome-title">Overview</h1>
-              <p className="welcome-subtitle">No data yet. Create a view to get started.</p>
-            </div>
-            <button className="button-primary" type="button" onClick={openCreate} data-testid="button-create-view">
-              <Plus size={15} /> Create a view
-            </button>
-          </div>
-
-          {createdView ? (
-            <div className="created-view" data-testid="card-created-view">
-              <span className="created-mark"><Layers3 size={18} /></span>
-              <span className="created-copy"><strong>{createdView.title}</strong><span>{createdView.description}</span></span>
-              <span className="view-status"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
-              <button className="icon-button" aria-label="Remove view" type="button" onClick={() => { setCreatedView(null); setToast('View removed from your workspace.'); }} data-testid="button-remove-view"><X size={15} /></button>
-            </div>
-          ) : (
-            <div className="starter-panel" data-testid="panel-empty-state">
-              <div className="starter-copy">
-                <div className="eyebrow">Nothing here. Yet.</div>
-                <h2>No data yet.</h2>
-                <p>Create a view to organize this workspace.</p>
-                <div className="starter-buttons">
-                  <button className="button-primary" type="button" onClick={openCreate} data-testid="button-start-building">
-                    <FilePlus2 size={14} /> Start building <ArrowUpRight size={13} />
-                  </button>
-                  <button className="button-secondary" type="button" onClick={() => setDialog('help')} data-testid="button-see-how">
-                    <BookOpen size={14} /> See how it works
-                  </button>
-                </div>
-              </div>
-              <div className="starter-visual" aria-label="3D core placeholder">
-                <div className="core-placeholder" data-testid="core-placeholder">
-                  <span className="status-dot status-dot-empty" aria-hidden="true" />
-                  <span>No data</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="empty-footer">
-            <div><div className="section-heading">Getting started</div><div className="section-caption">Choose a starting point.</div></div>
-            <button className="button-secondary" type="button" onClick={() => setDialog('help')} data-testid="button-open-guide">
-              Open the field guide <ArrowRight size={13} />
-            </button>
-          </div>
-          <div className="tips-row">
-            <button className="tip-card" type="button" onClick={openCreate} data-testid="tip-build-view">
-              <span className="tip-icon"><Grid2X2 size={15} /></span>
-              <span className="tip-copy"><strong>Make a view</strong><span>Give your project a place to take shape.</span></span>
-            </button>
-            <button className="tip-card" type="button" onClick={() => setDialog('help')} data-testid="tip-find-rhythm">
-              <span className="tip-icon"><Sparkles size={15} /></span>
-              <span className="tip-copy"><strong>Find your rhythm</strong><span>A few ideas for getting started, not rules.</span></span>
-            </button>
-            <button className="tip-card" type="button" onClick={() => setDialog('settings')} data-testid="tip-set-up">
-              <span className="tip-icon"><Settings2 size={15} /></span>
-              <span className="tip-copy"><strong>Set up your space</strong><span>Name it, tune it, make it feel like yours.</span></span>
-            </button>
-          </div>
-          <div className="bottom-note"><span>Made for the work ahead</span><ArrowDown size={12} /></div>
-        </section>
+        {children}
       </main>
-
-      {dialog && (
-        <div className="overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDialog(null); }}>
-          {dialog === 'create' ? (
-            <form className="dialog" onSubmit={saveView} aria-labelledby="create-title">
-              <div className="dialog-head"><div><div className="eyebrow">New starting point</div><h3 id="create-title">Create a view</h3></div><button className="icon-button" type="button" aria-label="Close dialog" onClick={() => setDialog(null)} data-testid="button-close-dialog"><X size={16} /></button></div>
-              <p className="dialog-intro">Give this space a name. You can add the details and tools that make it useful later.</p>
-              <label className="field-label" htmlFor="view-title">View name</label>
-              <input className="text-field" id="view-title" autoFocus value={viewTitle} onChange={(event) => setViewTitle(event.target.value)} placeholder="A name that makes sense to you" maxLength={50} required data-testid="input-view-title" />
-              <label className="field-label" htmlFor="view-description">A note to yourself <span className="field-optional">(optional)</span></label>
-              <input className="text-field" id="view-description" value={viewDescription} onChange={(event) => setViewDescription(event.target.value)} placeholder="What will this help you keep track of?" maxLength={100} data-testid="input-view-description" />
-              <div className="dialog-actions"><button className="button-secondary" type="button" onClick={() => setDialog(null)} data-testid="button-cancel-create">Not now</button><button className="button-primary" type="submit" data-testid="button-save-view"><Plus size={14} /> Create view</button></div>
-            </form>
-          ) : dialog === 'search' ? (
-            <div className="dialog" role="dialog" aria-labelledby="search-title">
-              <div className="dialog-head"><div><div className="eyebrow">Find your way</div><h3 id="search-title">Search</h3></div><button className="icon-button" type="button" aria-label="Close search" onClick={() => setDialog(null)} data-testid="button-close-search"><X size={16} /></button></div>
-              <div className="search-box"><Search size={15} /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search this workspace…" aria-label="Search this workspace" data-testid="input-search" /><Command size={13} /></div>
-              <div className="search-results">
-                {searchItems.length ? searchItems.map((item) => (
-                  <button className="search-result" type="button" key={item} onClick={() => { setDialog(item.includes('Create') ? 'create' : item.includes('preferences') ? 'settings' : 'help'); setSearch(''); }} data-testid={`search-result-${item.toLowerCase().replaceAll(' ', '-')}`}>
-                    {item.includes('Create') ? <Plus size={14} /> : item.includes('preferences') ? <Settings2 size={14} /> : <BookOpen size={14} />} {item}
-                  </button>
-                )) : <div className="search-result">No matches in this workspace.</div>}
-              </div>
-            </div>
-          ) : (
-            <div className="dialog" role="dialog" aria-labelledby="info-title">
-              <div className="dialog-head"><div><div className="eyebrow">{dialog === 'settings' ? 'Make it yours' : 'A note before you begin'}</div><h3 id="info-title">{dialog === 'settings' ? 'Workspace preferences' : 'A small field guide'}</h3></div><button className="icon-button" type="button" aria-label="Close dialog" onClick={() => setDialog(null)} data-testid="button-close-info"><X size={16} /></button></div>
-              {dialog === 'settings' ? (
-                <>
-              <p className="dialog-intro">Set a name for this workspace.</p>
-                  <label className="field-label" htmlFor="workspace-name">Workspace name</label><input className="text-field" id="workspace-name" value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} data-testid="input-workspace-name" />
-                  <div className="dialog-actions"><button className="button-primary" type="button" onClick={() => { setDialog(null); setToast('Preferences saved for this session.'); }} data-testid="button-save-settings"><Check size={14} /> Save preferences</button></div>
-                </>
-              ) : (
-                <>
-              <p className="dialog-intro">Omni is ready for your data. No data has been added yet.</p>
-                  <div className="field-guide-list">
-                    <div className="field-guide-item"><span className="tip-icon"><Plus size={14} /></span><span><strong>Start small.</strong> One useful place is better than a perfect system.</span></div>
-                    <div className="field-guide-item"><span className="tip-icon"><Layers3 size={14} /></span><span><strong>Make it yours.</strong> Views are a starting point, not a template.</span></div>
-                  </div>
-                  <div className="dialog-actions"><button className="button-primary" type="button" onClick={() => { setDialog('create'); }} data-testid="button-guide-create"><Plus size={14} /> Create your first view</button></div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-      {toast && <div className="toast-message" role="status" data-testid="status-toast"><Bell size={13} style={{ verticalAlign: 'middle', marginRight: 7 }} />{toast}</div>}
     </div>
   );
 }
 
-function Router({
+function HomePage() {
+  const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
+  const health = useHealthApiHealthGet({ query: { queryKey: getHealthApiHealthGetQueryKey() } });
+  const harnesses = pack.data?.harnesses ?? [];
+
+  if (pack.isLoading) {
+    return <section className="content"><div className="core-frame"><div className="core-loading"><div className="skeleton-line" /></div></div></section>;
+  }
+  if (pack.isError) {
+    return <section className="content"><ErrorState message="The workspace pack could not be reached." onRetry={() => { void pack.refetch(); }} /></section>;
+  }
+
+  return (
+    <section className="content">
+      <div className="home-heading">
+        <div className="home-heading-copy">
+          <div className="eyebrow">Omni / Stage 0</div>
+          <h1 className="page-heading">Core</h1>
+          <p className="page-description">An advise-only workspace. Specialist workspaces will explain findings with source records.</p>
+        </div>
+        <div className="home-note" data-testid="status-health">
+          {health.isLoading ? (
+            <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
+          ) : health.data?.status === 'ok' ? (
+            <span className="health-state"><span className="status-dot" aria-hidden="true" />On time</span>
+          ) : health.data ? (
+            <span className="health-state"><span className="status-dot status-dot-problem" aria-hidden="true" />Problem</span>
+          ) : (
+            <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
+          )}
+        </div>
+      </div>
+      <div className="core-frame" data-testid="panel-core-placeholder">
+        <Suspense fallback={<div className="core-loading" role="status">Loading core.</div>}>
+          <StageZeroCore harnesses={harnesses} />
+        </Suspense>
+      </div>
+    </section>
+  );
+}
+
+function HarnessPage() {
+  const [, params] = useRoute('/harness/:key');
+  const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
+  const harness = pack.data?.harnesses.find((item) => item.key === params?.key);
+
+  if (pack.isLoading) {
+    return <section className="content"><div className="glass-panel page-state"><div className="skeleton-line" /></div></section>;
+  }
+  if (pack.isError) {
+    return <section className="content"><ErrorState message="Workspace details could not be reached." onRetry={() => { void pack.refetch(); }} /></section>;
+  }
+  return (
+    <section className="content">
+      <div className="eyebrow">Omni / Workspace</div>
+      <h1 className="page-heading" data-testid="text-harness-label">{harness?.label ?? 'Workspace'}</h1>
+      <div className="glass-panel page-state" data-testid="panel-harness-empty">
+        <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>
+      </div>
+    </section>
+  );
+}
+
+function SettingsPage() {
+  const models = useModelsApiModelsGet({ query: { queryKey: getModelsApiModelsGetQueryKey() } });
+  const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
+  const loading = models.isLoading || pack.isLoading;
+
+  if (loading) {
+    return <section className="content"><div className="page-grid settings-grid"><div className="glass-panel panel-pad"><div className="skeleton-line" /></div><div className="glass-panel panel-pad"><div className="skeleton-line" /></div></div></section>;
+  }
+  if (models.isError || pack.isError) {
+    return (
+      <section className="content">
+        <div className="eyebrow">Omni</div><h1 className="page-heading">Settings</h1>
+        <ErrorState message="Model or pack information could not be reached." onRetry={() => { void models.refetch(); void pack.refetch(); }} />
+      </section>
+    );
+  }
+  const modelEntries = Object.entries(models.data?.tiers ?? {});
+  const spend = models.data?.daily_spend_usd ?? {};
+  const packInfo = pack.data;
+
+  return (
+    <section className="content">
+      <div className="eyebrow">Omni</div>
+      <h1 className="page-heading">Settings</h1>
+      <p className="page-description">Model tiers and the active pack.</p>
+      <div className="page-grid settings-grid">
+        <section className="glass-panel panel-pad" aria-labelledby="models-heading">
+          <h2 className="panel-heading" id="models-heading">API model tiers</h2>
+          <p className="panel-subtitle">Configuration returned by the API.</p>
+          {modelEntries.length ? (
+            <div className="model-list">
+              {modelEntries.map(([tier, details]) => (
+                <div className="model-row" key={tier} data-testid={`row-model-tier-${tier}`}>
+                  <div className="model-key">{tier}</div>
+                  <div className="model-details">
+                    <span>Model · {details.model}</span>
+                    <span className="mono">Daily spend · ${spend[details.model] ?? '—'}</span>
+                    {details.escalation_model && (
+                      <>
+                        <span>Escalation · {details.escalation_model}</span>
+                        <span className="mono">Daily spend · ${spend[details.escalation_model] ?? '—'}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="model-row">
+                <div className="model-key">Daily escalation budget</div>
+                <div className="model-details"><span className="mono">${models.data?.daily_escalation_budget_usd}</span></div>
+              </div>
+            </div>
+          ) : <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>}
+        </section>
+        <section className="glass-panel panel-pad" aria-labelledby="pack-heading">
+          <h2 className="panel-heading" id="pack-heading">Pack</h2>
+          <p className="panel-subtitle" data-testid="text-pack-name">{packInfo?.name ?? 'No data'}</p>
+          {packInfo?.harnesses.length ? (
+            <div className="pack-list">
+              {packInfo.harnesses.map((harness) => (
+                <div className="pack-row" key={harness.key} data-testid={`row-pack-harness-${harness.key}`}>
+                  <span className="model-key">{harness.label}</span>
+                  <span className="model-details mono">{harness.key}</span>
+                </div>
+              ))}
+            </div>
+          ) : <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>}
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function ProtectedRoutes({
   markUrl,
   landscapeAvailable,
 }: {
   markUrl: string | null;
   landscapeAvailable: boolean;
 }) {
+  const session = useSessionInfoApiAuthSessionGet({
+    query: {
+      queryKey: getSessionInfoApiAuthSessionGetQueryKey(),
+      retry: false,
+      staleTime: 30_000,
+    },
+    request: { credentials: 'same-origin' },
+  });
+  const [location] = useLocation();
+
+  if (location === '/sign-in') {
+    return <SignInPage markUrl={markUrl} landscapeAvailable={landscapeAvailable} />;
+  }
+  if (session.isLoading) return <LoadingScreen />;
+  if (session.isError || !session.data) return <Redirect to="/sign-in" />;
+
+  const activePath = location.startsWith('/harness/') ? '/harness' : location;
   return (
-    // Keep a shared shell (sidebar, navbar) outside the boundary so it
-    // survives a page crash.
-    <RoutedErrorBoundary>
+    <WorkspaceShell
+      markUrl={markUrl}
+      landscapeAvailable={landscapeAvailable}
+      activePath={activePath}
+      email={session.data.email}
+    >
       <Switch>
-        <Route
-          path="/"
-          component={() => (
-            <Home
-              markUrl={markUrl}
-              landscapeAvailable={landscapeAvailable}
-            />
-          )}
-        />
-        <Route
-          component={() => (
-            <NotFound
-              markUrl={markUrl}
-              landscapeAvailable={landscapeAvailable}
-            />
-          )}
-        />
+        <Route path="/" component={HomePage} />
+        <Route path="/harness/:key" component={HarnessPage} />
+        <Route path="/settings" component={SettingsPage} />
+        <Route component={() => (
+          <main className="page-graphite not-found-page">
+            <section className="not-found-card">
+              <h1>Page not found</h1>
+              <p>This route is not available.</p>
+              <Link className="nav-item" href="/" data-testid="link-return-home">Return to overview</Link>
+            </section>
+          </main>
+        )} />
       </Switch>
-    </RoutedErrorBoundary>
+    </WorkspaceShell>
   );
 }
 
@@ -292,59 +309,19 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function App() {
   const { markUrl, landscapeUrl } = useBrandAssets();
-  const [authState, setAuthState] = useState<
-    'checking' | 'signed-out' | 'signed-in'
-  >('checking');
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
-    const timeout = window.setTimeout(() => controller.abort(), 2500);
-
-    void fetch('/api/auth/session', {
-      credentials: 'same-origin',
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (active) setAuthState(response.ok ? 'signed-in' : 'signed-out');
-      })
-      .catch(() => {
-        if (active) setAuthState('signed-out');
-      })
-      .finally(() => window.clearTimeout(timeout));
-
-    return () => {
-      active = false;
-      controller.abort();
-      window.clearTimeout(timeout);
-    };
-  }, []);
-
   const appStyle = {
-    '--owner-landscape-photo': landscapeUrl
-      ? `url("${landscapeUrl}")`
-      : 'none',
+    '--owner-landscape-photo': landscapeUrl ? `url("${landscapeUrl}")` : 'none',
   } as CSSProperties;
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="app-frame" style={appStyle}>
-          {authState === 'signed-in' ? (
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-              <Router
-                markUrl={markUrl}
-                landscapeAvailable={Boolean(landscapeUrl)}
-              />
-            </WouterRouter>
-          ) : (
-            <SignInPage
-              markUrl={markUrl}
-              landscapeAvailable={Boolean(landscapeUrl)}
-              checkingSession={authState === 'checking'}
-              onSignedIn={() => setAuthState('signed-in')}
-            />
-          )}
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <RoutedErrorBoundary>
+              <ProtectedRoutes markUrl={markUrl} landscapeAvailable={Boolean(landscapeUrl)} />
+            </RoutedErrorBoundary>
+          </WouterRouter>
           <Toaster />
           <IntroLoader markUrl={markUrl} />
         </div>

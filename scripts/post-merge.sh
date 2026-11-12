@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 pnpm install --frozen-lockfile
-pnpm --filter db push
+(cd backend && uv sync --dev --locked && uv run alembic upgrade head)

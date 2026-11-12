@@ -14,6 +14,7 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 
 1. **Trust boundaries**
    - Code an AI agent can reach uses a read-only database connection. Only ingestion code may use the writing connection.
+   - The reader role has no direct DML rights. It may execute only narrow database procedures for append-only audit records, administrator seeding, and worker job claims/completion; never expose a generic mutation tool.
    - Agent tools only read. There is no tool that writes, deletes, sends or executes.
    - Agents never see credentials. Agents may write only to a separate scratch table explicitly marked as AI-generated.
    - Advise-only is the default.
@@ -78,7 +79,7 @@ Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashb
 
 - Buttons, cards, tables, tags, status dots, drawers and the page shell must follow Night Glass.
 - Keyboard focus is a 2 px Ice outline with a 2 px offset. Respect reduced-motion settings everywhere, including the 3D scene.
-- The lockup is the owner-supplied DDG loop mark, “DDG” in Geist 600, a thin divider, then “Omni” in Geist 300 at 78% white. Until the mark is available, show only the text lockup. Never draw or invent a logo.
+- The lockup uses the supplied `ddg-mark-glitch.png` mark, “DDG” in Geist 600, a thin divider, then “Omni” in Geist 300 at 78% white. The owner chose this glitch mark as a deliberate exception for the logo image only. If the file is missing, show the text lockup. Never draw or invent a logo.
 - Do not use glows, text glow, RGB glitch effects, magenta offsets, gradient fills, coloured text or coloured panels. Never put more than one accent colour in a card, put a busy photo behind text without glass, or show a sharp full photo outside the home page. The owner-supplied glitch mark is the one deliberate exception: glitch is allowed in that logo image only, with no added effects.
 - Stage 0's 3D core is a plain placeholder: white and glass only; white or frosted nodes; white hairline links; white Geist labels; each node has a hollow dot and “No data”. No glow, bloom or coloured lighting. Do not polish it before the owner reviews concepts.
 
@@ -93,11 +94,10 @@ Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashb
 
 ## Run and operate
 
-- Current scaffold preview: `pnpm --filter @workspace/dashboard run dev`.
-- The Python commands below are targets, not runnable yet; use them after the Stage 0 backend package exists.
-- `cd backend && uv run uvicorn omni.main:app --host 0.0.0.0 --port "$PORT"` — run the Python API and, when built, serve the dashboard.
-- `cd backend && uv run pytest` — run Python tests.
-- `cd backend && uv run ruff check . && uv run pyright` — lint and typecheck the Python backend.
+- The `artifacts/dashboard: web` run button executes `scripts/dev.sh`: it applies Alembic migrations, starts the single Python API and worker, and starts the React dashboard. Vite proxies `/api` to FastAPI during development.
+- Production builds Python runtime dependencies, regenerates API hooks from FastAPI, and builds the dashboard through `scripts/build-project.sh`; `scripts/serve-project.sh` applies Alembic migrations, then starts FastAPI to serve the API and built dashboard alongside the worker.
+- `pnpm run check` regenerates React hooks from FastAPI's OpenAPI document, typechecks and builds the dashboard, applies development migrations, runs Ruff and Pyright, and runs all pytest tests.
+- `pnpm --filter @workspace/api-spec run codegen` regenerates API types and hooks from `backend/openapi.generated.json`, which is created from the FastAPI app.
 - PostgreSQL connection settings are provided by the environment; never copy credentials into files.
 
 ## Target stack and source of truth
@@ -109,4 +109,4 @@ Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashb
 - Dashboard: `artifacts/dashboard/`.
 - Model gateway: `backend/omni/gateway/`; only this package may name or call model providers.
 - Sector packs: YAML files in `backend/omni/packs/`; the dashboard consumes labels from the API.
-- Do not keep a second API or database implementation. Remove the template Express, Drizzle and Zod libraries after the Python API replaces them, except for the minimum Replit tooling requires.
+- Do not keep a second API or database implementation. The Express server, Drizzle library and generated Zod package have been removed. The former API artifact's Replit metadata remains without a service so the existing registry entry is not edited outside Replit's artifact tooling.
