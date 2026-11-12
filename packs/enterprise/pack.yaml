@@ -1,0 +1,33 @@
+# Enterprise pack: labels and rules for a large commercial organisation.
+# First used for Corvane Group. A pack may relabel and add; it may not change
+# or remove anything in model/core.schema.yaml.
+
+name: enterprise
+version: 1
+
+harness_labels:
+  supply_logistics: Supply and Logistics
+  people: People
+  operations: Operations
+  finance: Finance
+  assets: Assets and Infrastructure
+  risk_compliance: Risk and Compliance
+
+entity_labels:
+  org_unit: Business unit
+  person: Employee
+  skill: Certification
+  activity: Project
+  event: Incident
+
+extra_entities: {}
+
+# Thresholds the watchlists use. Plain numbers so an administrator can tune them.
+rules:
+  supply_logistics:
+    stockout_warning_days: 60
+  people:
+    certification_expiry_warning_days: 90
+    minimum_certified_share: 0.9
+  assets:
+    availability_floor: 0.85

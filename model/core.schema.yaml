@@ -1,0 +1,218 @@
+# Omni universal data model, v1.
+#
+# This file is the single definition of every entity. Database tables, Python
+# types and TypeScript types are generated from it. Do not hand-write a second
+# definition anywhere.
+#
+# Sector packs (packs/<name>/pack.yaml) may relabel entities and add entities
+# of their own. They may not change or remove anything defined here.
+
+version: 1
+
+# Carried by every record of every entity.
+common_fields:
+  id: {type: uuid, required: true}
+  source_id: {type: uuid, required: true, note: "the raw landed record this came from"}
+  sensitivity: {type: enum, values: [public, internal, restricted], required: true}
+  valid_from: {type: date, required: true, note: "when this became true"}
+  valid_to: {type: date, note: "when it stopped being true; empty means still true"}
+  confidence: {type: float, required: true, note: "0 to 1, set by ingestion"}
+
+entities:
+  org_unit:
+    description: Any part of the organisation, at any level.
+    fields:
+      name: {type: text, required: true}
+      kind: {type: text, note: "division, region, business unit, site team"}
+      parent_id: {type: ref, to: org_unit}
+      location_id: {type: ref, to: location}
+
+  person:
+    description: Someone who works for the organisation.
+    fields:
+      display_name: {type: text, required: true}
+      org_unit_id: {type: ref, to: org_unit}
+      role_id: {type: ref, to: role}
+      employment_type: {type: text}
+      start_date: {type: date}
+      end_date: {type: date}
+
+  role:
+    description: A job or position, with the skills it requires.
+    fields:
+      title: {type: text, required: true}
+      org_unit_id: {type: ref, to: org_unit}
+      required_skill_ids: {type: ref_list, to: skill}
+
+  skill:
+    description: A qualification, certification, licence or competency.
+    fields:
+      name: {type: text, required: true}
+      validity_months: {type: integer, note: "empty means it does not expire"}
+
+  person_skill:
+    description: A skill held by a person, with its expiry.
+    fields:
+      person_id: {type: ref, to: person, required: true}
+      skill_id: {type: ref, to: skill, required: true}
+      awarded_on: {type: date}
+      expires_on: {type: date}
+
+  location:
+    description: "A place: a site, a building, a point or a line on the map."
+    fields:
+      name: {type: text, required: true}
+      kind: {type: text}
+      country: {type: text}
+      geometry: {type: geometry}
+
+  asset:
+    description: Equipment, a vehicle, a building or a piece of infrastructure.
+    fields:
+      name: {type: text, required: true}
+      asset_type: {type: text, required: true}
+      org_unit_id: {type: ref, to: org_unit}
+      location_id: {type: ref, to: location}
+      commissioned_on: {type: date}
+      status: {type: text}
+
+  maintenance_job:
+    description: Planned or unplanned work on an asset.
+    fields:
+      asset_id: {type: ref, to: asset, required: true}
+      kind: {type: text}
+      opened_on: {type: date, required: true}
+      closed_on: {type: date}
+      fault: {type: text}
+
+  item:
+    description: "A stocked thing: a part, a consumable, fuel."
+    fields:
+      name: {type: text, required: true}
+      category: {type: text}
+      unit: {type: text}
+
+  stock_level:
+    description: How much of an item a location held on a date.
+    fields:
+      item_id: {type: ref, to: item, required: true}
+      location_id: {type: ref, to: location, required: true}
+      quantity: {type: decimal, required: true}
+      as_of: {type: date, required: true}
+
+  stock_movement:
+    description: Receipt, issue or transfer of an item.
+    fields:
+      item_id: {type: ref, to: item, required: true}
+      from_location_id: {type: ref, to: location}
+      to_location_id: {type: ref, to: location}
+      quantity: {type: decimal, required: true}
+      moved_on: {type: date, required: true}
+      maintenance_job_id: {type: ref, to: maintenance_job}
+
+  supplier:
+    description: An outside organisation that provides goods or services.
+    fields:
+      name: {type: text, required: true}
+      country: {type: text}
+
+  purchase_order:
+    description: An order placed with a supplier.
+    fields:
+      supplier_id: {type: ref, to: supplier, required: true}
+      item_id: {type: ref, to: item}
+      quantity: {type: decimal}
+      ordered_on: {type: date, required: true}
+      promised_on: {type: date}
+      received_on: {type: date}
+      amount: {type: money}
+
+  contract:
+    description: An agreement with a supplier, customer or other party.
+    fields:
+      title: {type: text, required: true}
+      supplier_id: {type: ref, to: supplier}
+      org_unit_id: {type: ref, to: org_unit}
+      starts_on: {type: date}
+      ends_on: {type: date}
+      value: {type: money}
+
+  budget_line:
+    description: Money allocated to a unit for a purpose and period.
+    fields:
+      org_unit_id: {type: ref, to: org_unit, required: true}
+      category: {type: text, required: true}
+      period: {type: text, required: true}
+      amount: {type: money, required: true}
+
+  transaction:
+    description: Money spent or received.
+    fields:
+      budget_line_id: {type: ref, to: budget_line}
+      org_unit_id: {type: ref, to: org_unit}
+      contract_id: {type: ref, to: contract}
+      occurred_on: {type: date, required: true}
+      amount: {type: money, required: true}
+      description: "{type: text}"
+
+  activity:
+    description: "A unit of work: a project, task, shift, shipment or operation."
+    fields:
+      name: {type: text, required: true}
+      kind: {type: text}
+      parent_id: {type: ref, to: activity}
+      org_unit_id: {type: ref, to: org_unit}
+      location_id: {type: ref, to: location}
+      planned_start: {type: date}
+      planned_end: {type: date}
+      actual_start: {type: date}
+      actual_end: {type: date}
+      status: {type: text}
+
+  activity_requirement:
+    description: A person, role, asset or item that an activity needs.
+    fields:
+      activity_id: {type: ref, to: activity, required: true}
+      role_id: {type: ref, to: role}
+      asset_id: {type: ref, to: asset}
+      item_id: {type: ref, to: item}
+      quantity: {type: decimal}
+      needed_from: {type: date}
+      needed_to: {type: date}
+
+  event:
+    description: "Something that happened: an incident, a decision, a milestone."
+    fields:
+      kind: {type: text, required: true}
+      occurred_on: {type: date, required: true}
+      org_unit_id: {type: ref, to: org_unit}
+      location_id: {type: ref, to: location}
+      asset_id: {type: ref, to: asset}
+      summary: {type: text}
+
+  document:
+    description: A file or message, with its extracted text.
+    fields:
+      title: {type: text, required: true}
+      kind: {type: text}
+      authored_on: {type: date}
+      org_unit_id: {type: ref, to: org_unit}
+      text: {type: long_text}
+
+  risk:
+    description: An identified risk, obligation or audit finding.
+    fields:
+      title: {type: text, required: true}
+      category: {type: text}
+      org_unit_id: {type: ref, to: org_unit}
+      raised_on: {type: date}
+      severity: {type: text}
+      status: {type: text}
+
+# Not part of the organisation's data: how Omni tracks its own work.
+system_tables:
+  source: "one row per landed file or table: owner, format, time span, sensitivity, checksum"
+  raw_record: "one row per landed record, immutable; what source_id points to"
+  ledger: "append-only: question, tool calls, model, answer, sources, human decision"
+  egress_log: "append-only: every model call, what was sent, which model, cost"
+  scratch: "the only place agents may write: drafts, scenarios, notes"

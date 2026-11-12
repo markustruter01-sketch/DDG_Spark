@@ -1,0 +1,49 @@
+# Which model serves each tier. Changing a model is an edit here, nothing else.
+# Prices are per million tokens. They are left at 0 on purpose: fill them in
+# from the provider's current price list so the budget and spend views are real.
+
+[tiers]
+reason            = "opus"     # default for reasoning
+reason_escalation = "fable"    # used only when an escalation rule fires
+work              = "sonnet"
+bulk              = "haiku"
+# local_fallback  = "local"    # uncomment once a local model is configured
+
+[escalation]
+min_harnesses     = 3      # a question spanning this many harnesses escalates
+citation_failures = 2      # this many failed citation checks escalates
+daily_budget_usd  = 5.0    # escalation spend allowed per day; then fall back
+
+[models.fable]
+provider = "anthropic"
+model_id = "claude-fable-5-2"
+max_sensitivity = "INTERNAL"
+usd_per_mtok_in = 0.0
+usd_per_mtok_out = 0.0
+
+[models.opus]
+provider = "anthropic"
+model_id = "claude-opus-5-5"
+max_sensitivity = "INTERNAL"
+usd_per_mtok_in = 0.0
+usd_per_mtok_out = 0.0
+
+[models.sonnet]
+provider = "anthropic"
+model_id = "claude-sonnet-5-5"
+max_sensitivity = "INTERNAL"
+usd_per_mtok_in = 0.0
+usd_per_mtok_out = 0.0
+
+[models.haiku]
+provider = "anthropic"
+model_id = "claude-haiku-5-5"
+max_sensitivity = "INTERNAL"
+usd_per_mtok_in = 0.0
+usd_per_mtok_out = 0.0
+
+# Example of a local open-weight model behind an OpenAI-compatible server.
+# [models.local]
+# provider = "openai_compatible"
+# model_id = "qwen-or-any-open-model"
+# max_sensitivity = "RESTRICTED"
