@@ -40,6 +40,12 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
    - At the end of each stage, report each task as done, partly done or not done.
    - Include the exact gate commands and their output, anything not done and why, and anything changed that the stage did not ask for.
 
+## User preferences
+
+- The back end is Python and the dashboard is TypeScript. This is not to be revisited.
+- The dashboard's visual design, especially the central AI visual, is designed together with the owner through concepts. Stage 0's 3D core is a placeholder; do not polish visuals without the owner's direction.
+- The owner's starting idea for the AI visual is a circular frame filled with liquid that splashes when the AI thinks and talks.
+
 ## Run and operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server.
