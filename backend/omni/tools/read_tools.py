@@ -138,7 +138,7 @@ def _forecast(
         monthly[month] += float(row["quantity"])
     recent = sorted(monthly.items())[-3:]
     if len(recent) < 3:
-        raise ValueError("At least three monthly movement totals are required.")
+        raise ValueError("Not enough history: at least three monthly totals are required.")
 
     values = [amount for _, amount in recent]
     count = len(values)
@@ -149,19 +149,23 @@ def _forecast(
         sum((index - x_mean) * (amount - y_mean) for index, amount in enumerate(values))
         / denominator
     )
+    if slope <= 0:
+        raise ValueError("No rising consumption trend in the recent monthly totals.")
     intercept = y_mean - slope * x_mean
     projected_monthly = max(0.0, intercept + slope * count)
     if projected_monthly <= 0:
-        raise ValueError("The recent trend does not support a positive forecast.")
+        raise ValueError("No positive consumption trend supports a forecast.")
 
     quantity = float(current["quantity"])
     anchor = current["as_of"]
     projected_days = quantity / (projected_monthly / 30)
-    latest_observed = max(values)
-    earliest_days = quantity / (projected_monthly / 30)
-    latest_days = quantity / (latest_observed / 30)
-    if earliest_days > latest_days:
-        earliest_days, latest_days = latest_days, earliest_days
+    half_spread = (max(values) - min(values)) / 2
+    fastest_monthly = projected_monthly + half_spread
+    slowest_monthly = projected_monthly - half_spread
+    if slowest_monthly <= 0:
+        raise ValueError("The recent totals do not provide a positive lower bound.")
+    earliest_days = quantity / (fastest_monthly / 30)
+    latest_days = quantity / (slowest_monthly / 30)
     predicted_date = anchor + timedelta(days=round(projected_days))
     earliest_date = anchor + timedelta(days=round(earliest_days))
     latest_date = anchor + timedelta(days=round(latest_days))
@@ -174,12 +178,12 @@ def _forecast(
         "source_id": current["source_id"],
     }
     evidence = [_record("stock_level", stock_record)]
-    movement_by_month = {
-        row["moved_on"].strftime("%Y-%m"): row for row in movement_rows
-    }
-    for month, _ in recent:
-        row = movement_by_month[month]
-        evidence.append(_record("stock_movement", row))
+    recent_months = {month for month, _ in recent}
+    evidence.extend(
+        _record("stock_movement", row)
+        for row in movement_rows
+        if row["moved_on"].strftime("%Y-%m") in recent_months
+    )
 
     return {
         "item_name": item_name,
@@ -190,8 +194,9 @@ def _forecast(
         "estimated_days": round(projected_days, 1),
         "projected_monthly_use": round(projected_monthly, 1),
         "method": (
-            "Linear regression over the latest three monthly totals; the range "
-            "compares projected use with the last observed monthly rate."
+            "The linear trend gives the point estimate; half the observed "
+            "monthly-use spread is added and subtracted for the faster and slower "
+            "date bounds."
         ),
         "records": evidence,
     }
@@ -223,16 +228,25 @@ def items_within_horizon(value: HorizonInput) -> dict[str, Any]:
             .all()
         )
         ranked: list[dict[str, Any]] = []
+        skipped: list[dict[str, str]] = []
         for row in rows:
-            forecast = _forecast(
-                session,
-                str(row["item_name"]),
-                str(row["location_name"]),
-            )
+            item_name = str(row["item_name"])
+            location_name = str(row["location_name"])
+            try:
+                forecast = _forecast(session, item_name, location_name)
+            except ValueError as error:
+                skipped.append(
+                    {
+                        "item_name": item_name,
+                        "location_name": location_name,
+                        "reason": str(error),
+                    }
+                )
+                continue
             if forecast["estimated_days"] <= value.within_days:
                 ranked.append(forecast)
         ranked.sort(key=lambda item: item["estimated_days"])
-    return {"items": ranked}
+    return {"items": ranked, "skipped": skipped}
 
 
 def open_purchase_orders(value: ItemInput) -> dict[str, Any]:

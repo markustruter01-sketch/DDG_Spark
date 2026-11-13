@@ -59,7 +59,10 @@ TOOLS: dict[str, ReadTool] = {
         "items_within_horizon",
         HorizonInput,
         items_within_horizon,
-        "Rank items projected to reach zero within the requested number of days.",
+        (
+            "Rank items projected to reach zero within the requested days and list "
+            "items that could not be forecast with a plain reason."
+        ),
     ),
     "open_purchase_orders": ReadTool(
         "open_purchase_orders",

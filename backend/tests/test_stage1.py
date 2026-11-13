@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections import defaultdict
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,7 @@ from omni.ingest.loader import ingest_dataset
 from omni.ledger.postgres import PostgresAuditLedger
 from omni.packs.loader import active_pack
 from omni.sim.generate import CONFIG_FILE, generate_dataset
+from omni.tools import read_tools
 from omni.tools.read_tools import (
     DocumentSearchInput,
     HorizonInput,
@@ -46,6 +48,85 @@ from omni.tools.read_tools import (
     search_documents,
     stock_history,
 )
+
+
+class _FakeResult:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self._rows = rows
+
+    def mappings(self) -> _FakeResult:
+        return self
+
+    def all(self) -> list[dict[str, Any]]:
+        return self._rows
+
+    def first(self) -> dict[str, Any] | None:
+        return self._rows[0] if self._rows else None
+
+
+class _FakeForecastSession:
+    def __init__(
+        self,
+        item_name: str,
+        location_name: str,
+        movement_rows: list[dict[str, Any]],
+        additional_histories: dict[str, list[dict[str, Any]]] | None = None,
+    ) -> None:
+        histories = {item_name: movement_rows, **(additional_histories or {})}
+        self.location_name = location_name
+        self.items = [
+            {"item_name": name, "location_name": location_name}
+            for name in histories
+        ]
+        self.currents = {
+            name: {
+                "record_id": f"stock-level-{index}",
+                "quantity": 50.0,
+                "as_of": date(2026, 11, 13),
+                "item_name": name,
+                "location_name": location_name,
+                "source_id": f"source-stock-{index}",
+            }
+            for index, name in enumerate(histories, start=1)
+        }
+        self.histories = histories
+
+    def execute(self, statement: Any, params: Any = None) -> _FakeResult:
+        sql = str(statement)
+        if "SELECT DISTINCT i.name AS item_name" in sql:
+            return _FakeResult(self.items)
+        if "FROM stock_level AS sl" in sql:
+            return _FakeResult([self.currents[str(params["item_name"])]])
+        if "FROM stock_movement AS sm" in sql:
+            return _FakeResult(self.histories[str(params["item_name"])])
+        raise AssertionError(f"Unexpected forecast query: {sql}")
+
+
+class _FakeSessionContext:
+    def __init__(self, session: _FakeForecastSession) -> None:
+        self.session = session
+
+    def __enter__(self) -> _FakeForecastSession:
+        return self.session
+
+    def __exit__(self, *args: Any) -> None:
+        return None
+
+
+def _movement_rows(
+    item_name: str, location_name: str, entries: list[tuple[str, int]]
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "record_id": f"movement-{index}",
+            "quantity": quantity,
+            "moved_on": date.fromisoformat(moved_on),
+            "item_name": item_name,
+            "location_name": location_name,
+            "source_id": f"source-movement-{index}",
+        }
+        for index, (moved_on, quantity) in enumerate(entries, start=1)
+    ]
 
 
 def _dataset_config() -> dict[str, Any]:
@@ -188,6 +269,140 @@ def test_read_tools_return_lineage_and_forecast_within_answer_key() -> None:
     assert any(
         record["fields"]["full_text"] == report_text for record in search["records"]
     )
+
+
+def test_forecast_evidence_contains_every_movement_used_in_monthly_totals(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    item_name = "Test item"
+    location_name = "Test depot"
+    movements = _movement_rows(
+        item_name,
+        location_name,
+        [
+            ("2026-09-10", 10),
+            ("2026-09-28", 14),
+            ("2026-10-31", 30),
+            ("2026-11-05", 15),
+            ("2026-11-13", 21),
+        ],
+    )
+    session = _FakeForecastSession(item_name, location_name, movements)
+    monkeypatch.setattr(
+        read_tools,
+        "agent_session",
+        lambda: _FakeSessionContext(session),
+    )
+
+    forecast = item_demand_forecast(
+        ItemLocationInput(item_name=item_name, location_name=location_name)
+    )
+    movement_records = [
+        record for record in forecast["records"] if record["entity"] == "stock_movement"
+    ]
+    monthly_totals: dict[str, float] = defaultdict(float)
+    for record in movement_records:
+        month = record["fields"]["moved_on"][:7]
+        monthly_totals[month] += record["fields"]["quantity"]
+
+    assert len(movement_records) == len(movements)
+    assert dict(monthly_totals) == {
+        "2026-09": 24.0,
+        "2026-10": 30.0,
+        "2026-11": 36.0,
+    }
+    assert any(record["entity"] == "stock_level" for record in forecast["records"])
+    assert (
+        forecast["earliest_date"]
+        < forecast["predicted_runout_date"]
+        < forecast["latest_date"]
+    )
+    assert forecast["method"].count(".") == 1
+
+
+def test_items_at_risk_skips_an_item_with_only_two_months_of_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    item_name = "New item"
+    location_name = "Test depot"
+    session = _FakeForecastSession(
+        item_name,
+        location_name,
+        _movement_rows(
+            item_name,
+            location_name,
+            [("2026-10-31", 8), ("2026-11-13", 9)],
+        ),
+        additional_histories={
+            "Trending item": _movement_rows(
+                "Trending item",
+                location_name,
+                [
+                    ("2026-09-30", 10),
+                    ("2026-10-31", 20),
+                    ("2026-11-13", 30),
+                ],
+            )
+        },
+    )
+    monkeypatch.setattr(
+        read_tools,
+        "agent_session",
+        lambda: _FakeSessionContext(session),
+    )
+
+    result = items_within_horizon(
+        HorizonInput(location_name=location_name, within_days=60)
+    )
+
+    assert [item["item_name"] for item in result["items"]] == ["Trending item"]
+    assert result["skipped"] == [
+        {
+            "item_name": item_name,
+            "location_name": location_name,
+            "reason": "Not enough history: at least three monthly totals are required.",
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "quantities",
+    [
+        [10, 10, 10],
+        [30, 20, 10],
+    ],
+)
+def test_forecast_rejects_flat_or_falling_consumption(
+    monkeypatch: pytest.MonkeyPatch,
+    quantities: list[int],
+) -> None:
+    item_name = "Non-trending item"
+    location_name = "Test depot"
+    session = _FakeForecastSession(
+        item_name,
+        location_name,
+        _movement_rows(
+            item_name,
+            location_name,
+            list(
+                zip(
+                    ["2026-09-30", "2026-10-31", "2026-11-13"],
+                    quantities,
+                    strict=True,
+                )
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        read_tools,
+        "agent_session",
+        lambda: _FakeSessionContext(session),
+    )
+
+    with pytest.raises(ValueError, match="No rising consumption trend"):
+        item_demand_forecast(
+            ItemLocationInput(item_name=item_name, location_name=location_name)
+        )
 
 
 def test_sql_injection_string_is_only_a_parameterized_read(
