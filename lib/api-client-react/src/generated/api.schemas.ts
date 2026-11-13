@@ -4,6 +4,20 @@
  * Api
  * OpenAPI spec version: 0.1.0
  */
+export interface AskRequest {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  harness_key: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  question: string;
+  deep_think?: boolean;
+}
+
 export type ValidationErrorCtx = { [key: string]: unknown };
 
 export interface ValidationError {
@@ -21,6 +35,7 @@ export interface HTTPValidationError {
 export interface HarnessLabel {
   key: string;
   label: string;
+  available: boolean;
 }
 
 export type HealthResponseExtensions = {[key: string]: boolean};
@@ -79,4 +94,8 @@ export interface SignInRequest {
      */
   password: string;
 }
+
+export type AskApiAskPost200 = { [key: string]: unknown };
+
+export type EvidenceApiEvidenceEntityRecordIdGet200 = { [key: string]: unknown };
 

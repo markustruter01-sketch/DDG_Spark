@@ -7,8 +7,9 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 ## Stage and scope
 
 - Work on the current stage only. Do not start a later stage. If an instruction is unclear, stop and ask.
-- Current target: Stage 0 (Foundations).
-- Stage 0 excludes ingestion, real model calls, harness logic, agents, charts, maps and voice.
+- Current target: Stage 1 (Walking skeleton).
+- Stage 1 is one end-to-end synthetic-data question path with traceable sources, read-only agent tools, a gateway-routed harness, citations and a ledger.
+- Stage 1 excludes other harnesses, orchestration, entity resolution, AI-proposed mappings, scanned documents, charts, maps, voice, and changes to or visual polish of the 3D core.
 
 ## Rules for every stage
 
@@ -49,6 +50,12 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 - The back end is Python and the dashboard is TypeScript. This is not to be revisited.
 - The dashboard's visual design, especially the central AI visual, is designed together with the owner through concepts. Stage 0's 3D core is a placeholder; do not polish visuals without the owner's direction.
 - The owner's starting idea for the AI visual is a circular frame filled with liquid that splashes when the AI thinks and talks.
+
+## Carried forward
+
+- The database currently allows exactly one administrator. Revisit this when user management is built.
+- The agent identity can read every entity row regardless of the signed-in user's clearance. Enforce clearance when the agent tool layer matures; do not change this during Stage 1.
+- Derived platform and agent passwords must be reset by a migration if the owner database credential changes.
 
 ## Brand: Night Glass
 

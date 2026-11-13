@@ -73,10 +73,25 @@ def _decode_session(token: str, secret: str) -> dict[str, Any] | None:
 def ensure_admin_account() -> None:
     settings = get_settings()
     with platform_session() as session:
+        session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtext('omni-admin-bootstrap'))")
+        )
         found = session.execute(
             text("SELECT 1 FROM auth_user WHERE role = 'administrator' LIMIT 1")
         ).first()
         if found:
+            if settings.admin_password is not None:
+                password_hash = password_hasher.hash(settings.admin_password)
+                session.execute(
+                    text(
+                        """
+                        UPDATE auth_user SET password_hash = :password_hash
+                        WHERE role = 'administrator'
+                        """
+                    ),
+                    {"password_hash": password_hash},
+                )
+                session.commit()
             return
 
     generated = settings.admin_password is None

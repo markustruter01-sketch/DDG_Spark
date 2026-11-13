@@ -67,11 +67,15 @@ class PostgresAuditLedger:
 
 def append_ledger(
     *,
+    user_id: str | None = None,
+    harness: str | None = None,
     question: str,
     tool_calls: list[dict[str, Any]],
     model: str | None,
+    routing_reason: str | None = None,
     answer: str | None,
     sources: list[dict[str, Any]],
+    unsupported_statements: list[str] | None = None,
     human_decision: dict[str, Any] | None = None,
 ) -> None:
     with platform_session() as session:
@@ -79,20 +83,27 @@ def append_ledger(
             text(
                 """
                 INSERT INTO ledger
-                  (id, question, tool_calls, model, answer, sources,
+                  (id, user_id, harness, question, tool_calls, model,
+                   routing_reason, answer, sources, unsupported_statements,
                    human_decision, created_at)
                 VALUES
-                  (:id, :question, CAST(:tool_calls AS jsonb), :model, :answer,
-                   CAST(:sources AS jsonb), CAST(:human_decision AS jsonb), now())
+                  (:id, :user_id, :harness, :question,
+                   CAST(:tool_calls AS jsonb), :model, :routing_reason, :answer,
+                   CAST(:sources AS jsonb), CAST(:unsupported_statements AS jsonb),
+                   CAST(:human_decision AS jsonb), now())
                 """
             ),
             {
                 "id": uuid4(),
+                "user_id": user_id,
+                "harness": harness,
                 "question": question,
                 "tool_calls": json.dumps(tool_calls),
                 "model": model,
+                "routing_reason": routing_reason,
                 "answer": answer,
                 "sources": json.dumps(sources),
+                "unsupported_statements": json.dumps(unsupported_statements or []),
                 "human_decision": (
                     json.dumps(human_decision) if human_decision is not None else None
                 ),

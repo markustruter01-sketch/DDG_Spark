@@ -38,6 +38,7 @@ class ModelsResponse(BaseModel):
 class HarnessLabel(BaseModel):
     key: str
     label: str
+    available: bool
 
 
 class PackResponse(BaseModel):

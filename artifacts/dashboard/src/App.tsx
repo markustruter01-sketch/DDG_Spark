@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
+import { lazy, Suspense, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -37,6 +37,31 @@ const queryClient = new QueryClient({
     queries: { retry: 1, refetchOnWindowFocus: false },
   },
 });
+
+type EvidenceCitation = { entity: string; record_id: string };
+type AnswerStatement = {
+  text: string;
+  citations: EvidenceCitation[];
+  unsupported: boolean;
+};
+type AskResponse = {
+  statements: AnswerStatement[];
+  unsupported_statements: string[];
+  model: string;
+  routing_reason: string;
+  gateway_mode: string;
+};
+type EvidenceResponse = {
+  entity: string;
+  record: Record<string, unknown>;
+  raw_record: { payload: unknown };
+};
+
+function displayValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'object') return JSON.stringify(value, null, 2) ?? '—';
+  return String(value);
+}
 
 function LoadingScreen() {
   return (
@@ -107,7 +132,7 @@ function WorkspaceShell({
         </Link>
         <div className="workspace-switcher" aria-label="Current workspace">
           <span className="workspace-avatar">DDG</span>
-          <span className="workspace-meta"><strong>Omni</strong><span>Stage 0</span></span>
+          <span className="workspace-meta"><strong>Omni</strong><span>Stage 1</span></span>
           <ChevronDown size={14} aria-hidden="true" />
         </div>
         <div className="section-label">Workspace</div>
@@ -167,7 +192,7 @@ function HomePage() {
     <section className="content">
       <div className="home-heading">
         <div className="home-heading-copy">
-          <div className="eyebrow">Omni / Stage 0</div>
+          <div className="eyebrow">Omni / Stage 1</div>
           <h1 className="page-heading">Core</h1>
           <p className="page-description">An advise-only workspace. Specialist workspaces will explain findings with source records.</p>
         </div>
@@ -196,6 +221,53 @@ function HarnessPage() {
   const [, params] = useRoute('/harness/:key');
   const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
   const harness = pack.data?.harnesses.find((item) => item.key === params?.key);
+  const [question, setQuestion] = useState('');
+  const [deepThink, setDeepThink] = useState(false);
+  const [answer, setAnswer] = useState<AskResponse | null>(null);
+  const [askError, setAskError] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [evidence, setEvidence] = useState<EvidenceResponse | null>(null);
+  const [evidenceError, setEvidenceError] = useState('');
+
+  async function submitQuestion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAsking(true);
+    setAskError('');
+    setAnswer(null);
+    try {
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          harness_key: params?.key,
+          question: question.trim(),
+          deep_think: deepThink,
+        }),
+      });
+      if (!response.ok) throw new Error('The question could not be answered.');
+      setAnswer((await response.json()) as AskResponse);
+    } catch {
+      setAskError('The question could not be answered right now.');
+    } finally {
+      setAsking(false);
+    }
+  }
+
+  async function openEvidence(citation: EvidenceCitation) {
+    setEvidence(null);
+    setEvidenceError('');
+    try {
+      const response = await fetch(
+        `/api/evidence/${encodeURIComponent(citation.entity)}/${encodeURIComponent(citation.record_id)}`,
+        { credentials: 'same-origin' },
+      );
+      if (!response.ok) throw new Error('Evidence could not be loaded.');
+      setEvidence((await response.json()) as EvidenceResponse);
+    } catch {
+      setEvidenceError('Evidence could not be loaded.');
+    }
+  }
 
   if (pack.isLoading) {
     return <section className="content"><div className="glass-panel page-state"><div className="skeleton-line" /></div></section>;
@@ -207,9 +279,119 @@ function HarnessPage() {
     <section className="content">
       <div className="eyebrow">Omni / Workspace</div>
       <h1 className="page-heading" data-testid="text-harness-label">{harness?.label ?? 'Workspace'}</h1>
-      <div className="glass-panel page-state" data-testid="panel-harness-empty">
-        <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>
-      </div>
+      {harness?.available ? (
+        <div className="harness-layout">
+          <section className="glass-panel panel-pad" aria-labelledby="ask-heading">
+            <h2 className="panel-heading" id="ask-heading">Ask a question</h2>
+            <p className="panel-subtitle">Answers cite the records used.</p>
+            <form className="ask-form" onSubmit={(event) => void submitQuestion(event)}>
+              <label className="sr-only" htmlFor="harness-question">Question</label>
+              <textarea
+                id="harness-question"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                rows={3}
+                maxLength={4000}
+                placeholder="Ask a question about the available records"
+                required
+                data-testid="input-harness-question"
+              />
+              <div className="ask-controls">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={deepThink}
+                    onChange={(event) => setDeepThink(event.target.checked)}
+                    data-testid="toggle-deep-think"
+                  />
+                  <span>Deep think</span>
+                </label>
+                <button className="button-secondary" type="submit" disabled={asking || !question.trim()} data-testid="button-ask">
+                  {asking ? 'Thinking…' : 'Ask'}
+                </button>
+              </div>
+            </form>
+            {askError && <p className="request-error" role="alert">{askError}</p>}
+          </section>
+
+          {answer && (
+            <section className="glass-panel panel-pad answer-panel" aria-live="polite" data-testid="panel-answer">
+              <h2 className="panel-heading">Answer</h2>
+              {answer.gateway_mode === 'mock' && (
+                <p className="panel-subtitle" data-testid="status-mock-model">
+                  Gateway is running on the mock model; this answer uses the scripted sample.
+                </p>
+              )}
+              <div className="answer-statements">
+                {answer.statements.map((statement, index) => (
+                  <div className="answer-statement" key={`${index}-${statement.text}`}>
+                    <p>{statement.text}</p>
+                    {statement.unsupported && (
+                      <span className="unsupported-state">
+                        <span className="status-dot status-dot-empty" aria-hidden="true" />
+                        Unsupported
+                      </span>
+                    )}
+                    {statement.citations.map((citation, citationIndex) => (
+                      <button
+                        className="citation-marker"
+                        type="button"
+                        key={citation.record_id}
+                        onClick={() => void openEvidence(citation)}
+                        aria-label={`Open source record ${citation.record_id}`}
+                        data-testid="button-citation"
+                      >
+                        [{citationIndex + 1}]
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div className="answer-routing">
+                <div><span className="answer-label">Model</span><span className="mono">{answer.model || '—'}</span></div>
+                <div><span className="answer-label">Why</span><span>{answer.routing_reason || '—'}</span></div>
+              </div>
+            </section>
+          )}
+        </div>
+      ) : (
+        <div className="glass-panel page-state" data-testid="panel-harness-empty">
+          <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>
+        </div>
+      )}
+
+      {(evidence || evidenceError) && (
+        <div className="drawer-backdrop" role="presentation" onClick={() => { setEvidence(null); setEvidenceError(''); }}>
+          <aside
+            className="evidence-drawer glass-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="evidence-heading"
+            onClick={(event) => event.stopPropagation()}
+            data-testid="drawer-evidence"
+          >
+            <div className="drawer-heading">
+              <div>
+                <div className="eyebrow">Source record</div>
+                <h2 className="panel-heading" id="evidence-heading">{evidence?.entity ?? 'Evidence'}</h2>
+              </div>
+              <button className="button-secondary" type="button" onClick={() => { setEvidence(null); setEvidenceError(''); }}>Close</button>
+            </div>
+            {evidenceError ? <p role="alert">{evidenceError}</p> : evidence ? (
+              <>
+                <h3 className="evidence-section-title">Record fields</h3>
+                <dl className="evidence-fields">
+                  {Object.entries(evidence.record).map(([name, value]) => (
+                    <div key={name}><dt>{name}</dt><dd>{displayValue(value)}</dd></div>
+                  ))}
+                </dl>
+                <h3 className="evidence-section-title">Raw source row</h3>
+                <pre className="raw-source">{displayValue(evidence.raw_record.payload)}</pre>
+              </>
+            ) : <div className="empty-inline"><span className="status-dot status-dot-empty" />Loading evidence</div>}
+          </aside>
+        </div>
+      )}
     </section>
   );
 }

@@ -11,3 +11,4 @@ backend/.ruff_cache
 backend/.pyright
 backend/**/__pycache__
 backend/openapi.generated.json
+/generated-artifacts/

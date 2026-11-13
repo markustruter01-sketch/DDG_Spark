@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from omni.api import auth
-from omni.config import get_settings
+from omni.config import Settings, get_settings
 
 
 class FakeResult:
@@ -26,9 +26,19 @@ class FakeResult:
 class FakeSession:
     def __init__(self, user: dict[str, Any] | None) -> None:
         self.user = user
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+        self.committed = False
 
-    def execute(self, *_: Any, **__: Any) -> FakeResult:
+    def execute(
+        self,
+        statement: Any,
+        parameters: dict[str, Any] | None = None,
+    ) -> FakeResult:
+        self.calls.append((str(statement), parameters or {}))
         return FakeResult(self.user)
+
+    def commit(self) -> None:
+        self.committed = True
 
 
 def make_request(scheme: str = "https") -> Request:
@@ -113,6 +123,69 @@ def test_session_secret_has_no_builtin_default(
     monkeypatch.delenv("SESSION_SECRET", raising=False)
     with pytest.raises(RuntimeError, match="SESSION_SECRET is required"):
         get_settings()
+
+
+def test_admin_password_secret_updates_existing_hash_without_logging(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    new_password = "secret-only-test-value"
+    old_hash = auth.password_hasher.hash("old-test-password")
+    session = FakeSession({"id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa"})
+    settings = Settings(
+        database_url="postgresql://owner:example@localhost/omni",
+        session_secret="test-session-secret",
+        admin_email="admin@omni.local",
+        admin_password=new_password,
+    )
+
+    @contextmanager
+    def fake_platform_session():
+        yield session
+
+    monkeypatch.setattr(auth, "get_settings", lambda: settings)
+    monkeypatch.setattr(auth, "platform_session", fake_platform_session)
+    auth.ensure_admin_account()
+
+    updates = [
+        parameters
+        for statement, parameters in session.calls
+        if statement.lstrip().startswith("UPDATE auth_user")
+    ]
+    assert len(updates) == 1
+    new_hash = updates[0]["password_hash"]
+    assert isinstance(new_hash, str)
+    assert new_hash != old_hash
+    assert new_hash != new_password
+    assert auth.password_hasher.verify(new_hash, new_password)
+    assert session.committed
+    assert new_password not in caplog.text
+
+
+def test_admin_password_is_unchanged_when_secret_is_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession({"id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa"})
+    settings = Settings(
+        database_url="postgresql://owner:example@localhost/omni",
+        session_secret="test-session-secret",
+        admin_email="admin@omni.local",
+        admin_password=None,
+    )
+
+    @contextmanager
+    def fake_platform_session():
+        yield session
+
+    monkeypatch.setattr(auth, "get_settings", lambda: settings)
+    monkeypatch.setattr(auth, "platform_session", fake_platform_session)
+    auth.ensure_admin_account()
+
+    assert not any(
+        statement.lstrip().startswith("UPDATE auth_user")
+        for statement, _ in session.calls
+    )
+    assert not session.committed
 
 
 def test_sign_out_route_requires_a_session_and_clears_the_cookie() -> None:

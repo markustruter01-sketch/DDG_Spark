@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 
 PACK_DIR = Path(__file__).parent
+HARNESS_DIR = PACK_DIR.parent / "harness"
 
 
 @lru_cache(maxsize=4)
@@ -39,7 +40,12 @@ def public_pack() -> dict[str, Any]:
     return {
         "name": pack["name"],
         "harnesses": [
-            {"key": key, "label": label} for key, label in pack["harnesses"].items()
+            {
+                "key": key,
+                "label": label,
+                "available": (HARNESS_DIR / key / "manifest.yaml").is_file(),
+            }
+            for key, label in pack["harnesses"].items()
         ],
         "entities": pack["entities"],
         "rules": pack.get("rules", {}),

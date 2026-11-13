@@ -11,8 +11,10 @@ from fastapi.staticfiles import StaticFiles
 from omni.api.auth import ensure_admin_account
 from omni.api.auth import router as auth_router
 from omni.api.routes import router as foundation_router
+from omni.api.stage1 import router as stage1_router
 from omni.gateway.config import load_config
-from omni.gateway.service import ModelGateway
+from omni.gateway.service import build_configured_gateway
+from omni.harness.loader import load_harness
 from omni.ledger.postgres import PostgresAuditLedger
 from omni.packs.loader import active_pack
 
@@ -22,12 +24,24 @@ PUBLIC_DIR = WORKSPACE_ROOT / "artifacts" / "dashboard" / "dist" / "public"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    active_pack()
+    pack = active_pack()
     audit_ledger = PostgresAuditLedger()
-    app.state.gateway = ModelGateway(
+    mock_hooks: dict[str, object] = {}
+    for key in pack["harnesses"]:
+        try:
+            manifest = load_harness(key)
+        except ValueError:
+            continue
+        mock_hooks = {
+            "reply_factory": manifest.get("mock_reply_factory"),
+            "tool_call_factory": manifest.get("mock_tool_call_factory"),
+        }
+        break
+    app.state.gateway = build_configured_gateway(
         config=load_config(),
         spend_ledger=audit_ledger,
         egress_recorder=audit_ledger,
+        **mock_hooks,
     )
     ensure_admin_account()
     yield
@@ -43,6 +57,7 @@ app = FastAPI(
 )
 app.include_router(auth_router)
 app.include_router(foundation_router)
+app.include_router(stage1_router)
 
 if PUBLIC_DIR.exists():
     app.mount(

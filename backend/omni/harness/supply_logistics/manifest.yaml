@@ -1,0 +1,22 @@
+key: supply_logistics
+scope:
+  - location
+  - org_unit
+  - asset
+  - item
+  - stock_level
+  - stock_movement
+  - maintenance_job
+  - purchase_order
+  - supplier
+  - document
+tools:
+  - item_history
+  - item_demand_forecast
+  - items_within_horizon
+  - open_purchase_orders
+  - maintenance_jobs_using_item
+  - search_documents
+instructions: instructions.md
+output_template: templates/answer.json
+maximum_tool_rounds: 3

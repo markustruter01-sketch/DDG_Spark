@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20.1",
+    "anthropic>=2.8.0",
     "argon2-cffi>=25.1.0",
     "fastapi>=0.162.5",
     "geoalchemy2>=0.21.0",
+    "openai>=3.50.0",
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.9",
     "pyyaml>=6.0.3",

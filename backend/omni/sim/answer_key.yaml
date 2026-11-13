@@ -1,0 +1,5 @@
+critical_item_name: Hydraulic return filter assembly
+expected_runout_window:
+  earliest: "2026-12-12"
+  latest: "2026-12-30"
+method: Three-month linear consumption trend, projected across the remaining quantity.

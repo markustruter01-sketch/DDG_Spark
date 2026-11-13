@@ -109,7 +109,17 @@ class ModelGateway:
         call_day = today or date.today()
         decision = self.route(request, call_day)
         adapter = self.adapters[decision.model.model_id]
-        completion = adapter.complete(messages)
+        try:
+            completion = adapter.complete(messages)
+        except Exception:
+            self._record(
+                decision,
+                call_day,
+                {"operation": "complete", "messages": messages},
+                0,
+                0,
+            )
+            raise
         cost = call_cost(
             completion.tokens_in,
             completion.tokens_out,
@@ -136,7 +146,19 @@ class ModelGateway:
     ) -> tuple[RouteDecision, ToolResponse, Decimal]:
         call_day = today or date.today()
         decision = self.route(request, call_day)
-        response = self.adapters[decision.model.model_id].call_tools(messages, tools)
+        try:
+            response = self.adapters[decision.model.model_id].call_tools(
+                messages, tools
+            )
+        except Exception:
+            self._record(
+                decision,
+                call_day,
+                {"operation": "call_tools", "messages": messages, "tools": tools},
+                0,
+                0,
+            )
+            raise
         cost = self._record(
             decision,
             call_day,
@@ -155,7 +177,17 @@ class ModelGateway:
     ) -> tuple[RouteDecision, ExtractionResponse, Decimal]:
         call_day = today or date.today()
         decision = self.route(request, call_day)
-        response = self.adapters[decision.model.model_id].extract(document, form)
+        try:
+            response = self.adapters[decision.model.model_id].extract(document, form)
+        except Exception:
+            self._record(
+                decision,
+                call_day,
+                {"operation": "extract", "document": document, "form": form},
+                0,
+                0,
+            )
+            raise
         cost = self._record(
             decision,
             call_day,
@@ -216,15 +248,62 @@ class ModelGateway:
             ),
         }
 
+    def is_tier_live(self, tier: str) -> bool:
+        if tier not in self.config.tiers:
+            raise ValueError(f"Unknown gateway tier: {tier}")
+        model = self.config.models[self.config.tiers[tier].default]
+        return not isinstance(self.adapters[model.model_id], MockAdapter)
+
     def health(self) -> dict[str, Any]:
         adapter_names = sorted(
             {adapter.describe().name for adapter in self.adapters.values()}
         )
-        return {"status": "ok", "adapter_count": len(adapter_names)}
+        mock_count = sum(
+            isinstance(adapter, MockAdapter) for adapter in self.adapters.values()
+        )
+        if mock_count == len(self.adapters):
+            mode = "mock"
+            message = "Gateway is running on the mock model."
+        elif mock_count:
+            mode = "mixed"
+            message = "Gateway has both mock and live model adapters."
+        else:
+            mode = "live"
+            message = "Gateway is running on configured live model adapters."
+        return {
+            "status": "ok",
+            "adapter_count": len(adapter_names),
+            "mode": mode,
+            "message": message,
+        }
 
 
 def build_mock_gateway() -> ModelGateway:
     return ModelGateway()
+
+
+def build_configured_gateway(
+    *,
+    config: GatewayConfig | None = None,
+    spend_ledger: SpendLedger | None = None,
+    egress_recorder: EgressRecorder | None = None,
+    reply_factory: Any = None,
+    tool_call_factory: Any = None,
+) -> ModelGateway:
+    selected_config = config or load_config()
+    from omni.gateway.providers import configured_adapters
+
+    adapters = configured_adapters(
+        selected_config,
+        reply_factory=reply_factory,
+        tool_call_factory=tool_call_factory,
+    )
+    return ModelGateway(
+        config=selected_config,
+        adapters=adapters,
+        spend_ledger=spend_ledger,
+        egress_recorder=egress_recorder,
+    )
 
 
 def model_description(model: ModelConfig) -> ModelDescription:
