@@ -32,3 +32,10 @@ python -m unittest discover -s tests -v
 1. A stage instruction in `docs/stages/` is given to the Replit Agent.
 2. Replit builds the stage and pushes to this repository.
 3. The work is reviewed against that stage's gate before the next stage starts.
+
+## Where the working code is
+
+The app is built and run in Replit. This repository currently holds the plan,
+the rules, the brand assets and an early Python reference of the model
+gateway. The Replit code is the source of truth for the application until the
+two are connected.
