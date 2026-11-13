@@ -13,9 +13,12 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 ## Rules for every stage
 
 1. **Trust boundaries**
-   - Code an AI agent can reach uses a read-only database connection. Only ingestion code may use the writing connection.
-   - The reader role has no direct DML rights. It may execute only narrow database procedures for append-only audit records, administrator seeding, and worker job claims/completion; never expose a generic mutation tool.
-   - Agent tools only read. There is no tool that writes, deletes, sends or executes.
+   - Use three direct-login database identities. The owner identity is only for migrations and ingestion; platform services use the platform identity; code reachable by an AI agent may hold only the agent identity. Never switch roles after connecting.
+   - Derive platform and agent login passwords inside the back end from the owner's existing database credential and the fixed role name using a keyed hash. Do not store or expose these credentials.
+   - The platform identity is limited to account/session and job operations, dashboard reads, and insert/read access to the append-only ledger and egress log. It cannot change database structure.
+   - The agent identity may read only the 21 entity tables and may insert/read only the AI-generated scratch table. It has no access to accounts, sessions, jobs, source records, raw records, ledger or egress log, and no permission to run application procedures.
+   - The platform, not the agent, writes ledger and egress records around agent activity. Agent tools do not write, delete, send or execute.
+   - New tables are private to the agent identity by default; grant agent access only explicitly.
    - Agents never see credentials. Agents may write only to a separate scratch table explicitly marked as AI-generated.
    - Advise-only is the default.
    - Only the model gateway module may import a model provider SDK or name a model. All other code asks the gateway for a tier.

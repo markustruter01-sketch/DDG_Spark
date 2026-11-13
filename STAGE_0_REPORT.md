@@ -177,3 +177,69 @@ Industry-term search of executable backend source and dashboard source: **no mat
 ## Publishing recommendation
 
 **Recommended: Reserved VM.** Omni runs a persistent PostgreSQL job worker and exposes long-lived server-sent-event connections. A continuously running VM is a better fit than a scale-to-zero deployment for those processes and connections. The current workspace deployment target was not changed or published.
+
+## Gate review fixes
+
+Review date: 2026-11-13. This section records the owner's corrections to the Stage 0 trust-boundary review. The prior two-identity report above is superseded where it conflicts with this section.
+
+| Finding or requested fix | Status | What changed and evidence |
+|---|---|---|
+| A. Reader role could switch back to owner | **Done** | Replaced runtime role switching with direct logins for `omni_platform` and `omni_agent`; a new migration derives their passwords as HMAC-SHA256 from the owner database password and fixed role name. Connections are separated in `backend/omni/db/platform.py`, `backend/omni/db/agent.py` and `backend/omni/db/owner.py`. Tests assert both `session_user` and `current_user` are the intended role, `RESET ROLE` stays agent, and attempts to switch to platform or owner fail with PostgreSQL permission errors. |
+| B. Agent could read accounts and jobs | **Done** | The migration revokes public table privileges and grants agent `SELECT` only on the 21 schema-defined entity tables, plus `SELECT`/`INSERT` on `scratch`. Agent tests confirm reads of `auth_user`, `job`, `ledger`, `egress_log`, `source` and `raw_record` fail, while an entity read and scratch insert/read succeed. |
+| C. Agent could run administrator bootstrap | **Done** | The bootstrap procedure was removed. Startup now inserts through the platform identity only when no administrator exists; the database also has a partial unique index allowing at most one administrator. A second bootstrap call leaves the administrator count at one. |
+| D. Agent could forge logs or manipulate jobs through procedures | **Done** | Removed the egress, ledger, bootstrap and job procedures. Platform services now use direct table permissions. The migration revokes public execute on the remaining trigger function and removes default public function execution for future functions. Agent tests prove the removed procedures cannot be called and no `omni_*` public function is executable by the agent. |
+| Platform privileges and protected audit rows | **Done** | Platform can read application tables, read/write `auth_user` and `job`, and insert/read `ledger` and `egress_log`; it cannot update/delete audit rows, create/alter/drop tables or insert entity rows. The original owner-only append-only trigger tests remain. |
+| Runtime connections | **Done** | Sign-in, session lookup, health reads, worker claims/completion, egress appends and spend reads use the direct platform login. Agent code receives only the dedicated agent session API. The owner engine is separated and is not imported by runtime API, gateway or worker code. |
+| Router explanations | **Done** | Escalation reasons now name the fired condition and its count/threshold where applicable. When the budget blocks escalation, the reason also states which condition would have escalated. Tests cover all four explanations and the budget case. |
+| Sign-out | **Done** | Added authenticated `POST /api/auth/sign-out`, which clears the session cookie, and a sign-out button in the dashboard shell. The route test checks unauthenticated rejection and successful cookie clearing. |
+| Session signing secret | **Done** | There is no built-in value. Startup refuses to proceed with the clear error `SESSION_SECRET is required.` A test verifies this behavior; no new secret was created or stored. |
+| Project trust rules | **Done** | `replit.md` now specifies the owner, platform and agent identities, their distinct permissions, no role switching, platform-owned audit writes, and private-by-default agent table access. |
+| Full Stage 0 gate | **Done** | The new migration applied successfully; the live API is healthy and the migration head is `0002_service_identities`. The full workspace gate passed below. No publishing-type setting was changed. |
+
+The original `0001_foundations` migration remains as historical migration history; `0002_service_identities` revokes its legacy reader grants and drops its privileged procedures. At the active migration head, runtime connections are direct logins and no application code switches roles. `SET ROLE`/`RESET ROLE` occur only in negative security tests.
+
+### Commands and outputs
+
+Migration command:
+
+```text
+cd backend && uv run alembic upgrade head
+INFO  [alembic.runtime.migration] Running upgrade 0001_foundations -> 0002_service_identities
+```
+
+Migration head and live endpoint checks:
+
+```text
+cd backend && uv run alembic current
+0002_service_identities (head)
+
+GET /api/health
+{"status":"ok","database":"ok","extensions":{"vector":true,"postgis":true},"gateway":{"status":"ok","adapter_count":5}}
+
+GET /api/models without a session: 401
+POST /api/auth/sign-out without a session: 401
+```
+
+Full gate command:
+
+```text
+pnpm run check
+```
+
+Final output:
+
+```text
+All checks passed!
+41 files already formatted
+0 errors, 0 warnings, 0 informations
+........................................................                 [100%]
+=============================== warnings summary ===============================
+../.pythonlibs/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /home/runner/workspace/.pythonlibs/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+56 passed, 1 warning in 3.58s
+```
+
+The test warning is from the existing Starlette/httpx TestClient integration; it does not fail the gate. The dashboard build also retains the existing tooltip sourcemap warning and the non-fatal Three.js chunk-size warning. There are no unresolved database permission blockers: the database accepted both login roles and their derived passwords.

@@ -248,6 +248,80 @@ export function useSessionInfoApiAuthSessionGet<TData = Awaited<ReturnType<typeo
 
 
 
+export const getSignOutApiAuthSignOutPostUrl = () => {
+
+
+
+
+  return `/api/auth/sign-out`
+}
+
+/**
+ * @summary Sign Out
+ */
+export const signOutApiAuthSignOutPost = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getSignOutApiAuthSignOutPostUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSignOutApiAuthSignOutPostMutationKey = () => ['signOutApiAuthSignOutPost'] as const;
+
+export const getSignOutApiAuthSignOutPostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>, TError,void, TContext> => {
+
+const mutationKey = getSignOutApiAuthSignOutPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>, void> = () => {
+
+
+          return  signOutApiAuthSignOutPost(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignOutApiAuthSignOutPostMutationResult = NonNullable<Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>>
+
+    export type SignOutApiAuthSignOutPostMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Sign Out
+ */
+export const useSignOutApiAuthSignOutPost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof signOutApiAuthSignOutPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSignOutApiAuthSignOutPostMutationOptions(options), queryClient);
+    }
+
 export const getHealthApiHealthGetUrl = () => {
 
 

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 from omni.api.auth import CurrentUser
-from omni.db.connections import reader_session
+from omni.db.platform import platform_session
 from omni.gateway.service import ModelGateway
 from omni.packs.loader import public_pack
 
@@ -52,7 +52,7 @@ def health(request: Request) -> HealthResponse:
     database_status = "ok"
     extensions = {"vector": False, "postgis": False}
     try:
-        with reader_session() as session:
+        with platform_session() as session:
             session.execute(text("SELECT 1"))
             installed = set(
                 session.execute(text("SELECT extname FROM pg_extension")).scalars()

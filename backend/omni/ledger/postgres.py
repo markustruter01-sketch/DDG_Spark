@@ -4,10 +4,11 @@ import json
 from datetime import date
 from decimal import Decimal
 from typing import Any
+from uuid import uuid4
 
 from sqlalchemy import text
 
-from omni.db.connections import reader_session
+from omni.db.platform import platform_session
 
 
 class PostgresAuditLedger:
@@ -19,7 +20,7 @@ class PostgresAuditLedger:
             WHERE model = :model_id AND created_at::date = :day
             """
         )
-        with reader_session() as session:
+        with platform_session() as session:
             value = session.execute(
                 query, {"model_id": model_id, "day": day}
             ).scalar_one()
@@ -39,17 +40,20 @@ class PostgresAuditLedger:
         tokens_in: int,
         tokens_out: int,
     ) -> None:
-        with reader_session() as session:
+        with platform_session() as session:
             session.execute(
                 text(
                     """
-                    SELECT omni_append_egress(
-                        :model_id, CAST(:what_sent AS jsonb), :reason,
-                        :cost_usd, :tokens_in, :tokens_out
-                    )
+                    INSERT INTO egress_log
+                      (id, model, what_sent, reason, cost_usd, tokens_in,
+                       tokens_out, created_at)
+                    VALUES
+                      (:id, :model_id, CAST(:what_sent AS jsonb), :reason,
+                       :cost_usd, :tokens_in, :tokens_out, now())
                     """
                 ),
                 {
+                    "id": uuid4(),
                     "model_id": model_id,
                     "what_sent": json.dumps(what_sent),
                     "reason": reason,
@@ -70,17 +74,20 @@ def append_ledger(
     sources: list[dict[str, Any]],
     human_decision: dict[str, Any] | None = None,
 ) -> None:
-    with reader_session() as session:
+    with platform_session() as session:
         session.execute(
             text(
                 """
-                SELECT omni_append_ledger(
-                    :question, CAST(:tool_calls AS jsonb), :model, :answer,
-                    CAST(:sources AS jsonb), CAST(:human_decision AS jsonb)
-                )
+                INSERT INTO ledger
+                  (id, question, tool_calls, model, answer, sources,
+                   human_decision, created_at)
+                VALUES
+                  (:id, :question, CAST(:tool_calls AS jsonb), :model, :answer,
+                   CAST(:sources AS jsonb), CAST(:human_decision AS jsonb), now())
                 """
             ),
             {
+                "id": uuid4(),
                 "question": question,
                 "tool_calls": json.dumps(tool_calls),
                 "model": model,

@@ -30,19 +30,33 @@ def test_each_tier_uses_its_configured_default(tier_name: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "route_request_case",
+    ("route_request_case", "expected_reason"),
     [
-        RouteRequest(tier="reason", deep_think=True),
-        RouteRequest(tier="reason", harness_count=3),
-        RouteRequest(tier="reason", challenger_disagreed=True),
-        RouteRequest(tier="reason", citation_check_failures=2),
+        (
+            RouteRequest(tier="reason", deep_think=True),
+            "Deep think was switched on",
+        ),
+        (
+            RouteRequest(tier="reason", harness_count=3),
+            "question spans 3 harnesses (minimum 3)",
+        ),
+        (
+            RouteRequest(tier="reason", challenger_disagreed=True),
+            "challenger disagreed with the first answer",
+        ),
+        (
+            RouteRequest(tier="reason", citation_check_failures=2),
+            "Citation checks failed 2 times (threshold 2)",
+        ),
     ],
 )
-def test_each_reason_rule_escalates(route_request_case: RouteRequest) -> None:
+def test_each_reason_rule_escalates(
+    route_request_case: RouteRequest, expected_reason: str
+) -> None:
     config, spend = setup_gateway()
     decision = route_request(config, route_request_case, spend, TODAY)
     assert decision.model_key == config.tiers["reason"].escalation
-    assert decision.reason
+    assert expected_reason in decision.reason
 
 
 def test_reason_stays_default_below_escalation_thresholds() -> None:
@@ -58,6 +72,7 @@ def test_reason_stays_default_below_escalation_thresholds() -> None:
         TODAY,
     )
     assert decision.model_key == config.tiers["reason"].default
+    assert "configured default" in decision.reason.lower()
 
 
 def test_only_reason_tier_escalates() -> None:
@@ -80,6 +95,8 @@ def test_spent_budget_keeps_reason_default() -> None:
     )
     assert decision.model_key == config.tiers["reason"].default
     assert "budget" in decision.reason.lower()
+    assert "deep think was switched on" in decision.reason.lower()
+    assert "rule that would have fired" in decision.reason.lower()
 
 
 def test_restricted_request_routes_to_local_fallback() -> None:

@@ -1,5 +1,5 @@
-import { lazy, Suspense, type CSSProperties, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -19,7 +19,7 @@ import {
   usePackApiPackGet,
   useSessionInfoApiAuthSessionGet,
 } from '@workspace/api-client-react';
-import { ArrowRight, ChevronDown, CircleHelp, Grid2X2, Settings2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, Grid2X2, LogOut, Settings2 } from 'lucide-react';
 import {
   Link,
   Redirect,
@@ -75,6 +75,28 @@ function WorkspaceShell({
   activePath: string;
   email: string;
 }) {
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState(false);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    setSignOutError(false);
+    try {
+      const response = await fetch('/api/auth/sign-out', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error('Sign-out failed.');
+      queryClient.clear();
+      setLocation('/sign-in');
+    } catch {
+      setSignOutError(true);
+      setSigningOut(false);
+    }
+  }
+
   return (
     <div
       className={`workspace ${activePath === '/' ? 'workspace-home' : 'page-graphite'} ${landscapeAvailable ? 'has-landscape' : ''}`}
@@ -104,8 +126,19 @@ function WorkspaceShell({
           <span className="profile-copy" data-testid="text-signed-in-account">
             {email}<small>Signed in</small>
           </span>
-          <span className="icon-button" aria-hidden="true"><CircleHelp size={15} /></span>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => void handleSignOut()}
+            disabled={signingOut}
+            aria-label="Sign out"
+            title="Sign out"
+            data-testid="button-sign-out"
+          >
+            <LogOut size={15} aria-hidden="true" />
+          </button>
         </div>
+        {signOutError && <div className="sign-out-error" role="status">Could not sign out. Try again.</div>}
       </aside>
       <main className="main-area">
         <header className="topbar">

@@ -49,29 +49,38 @@ def route_request(
     model_key = tier.default
     reason = f"Selected the configured default for the {request.tier} tier."
 
-    should_escalate = (
-        request.tier == "reason"
-        and tier.escalation is not None
-        and any(
-            (
-                request.deep_think,
-                request.harness_count >= config.router.minimum_harnesses,
-                request.challenger_disagreed,
-                request.citation_check_failures >= config.router.citation_failures,
-            )
+    fired_rules: list[str] = []
+    if request.deep_think:
+        fired_rules.append("Deep think was switched on.")
+    if request.harness_count >= config.router.minimum_harnesses:
+        fired_rules.append(
+            f"The question spans {request.harness_count} harnesses "
+            f"(minimum {config.router.minimum_harnesses})."
         )
+    if request.challenger_disagreed:
+        fired_rules.append("The challenger disagreed with the first answer.")
+    if request.citation_check_failures >= config.router.citation_failures:
+        fired_rules.append(
+            f"Citation checks failed {request.citation_check_failures} times "
+            f"(threshold {config.router.citation_failures})."
+        )
+
+    should_escalate = (
+        request.tier == "reason" and tier.escalation is not None and bool(fired_rules)
     )
     if should_escalate and tier.escalation:
         escalation_model = config.models[tier.escalation]
         spent = spend_ledger.total_for_model(escalation_model.model_id, today)
         if spent >= Decimal(str(config.router.daily_escalation_budget_usd)):
             reason = (
-                "The daily escalation budget is spent; stayed with the reason default."
+                "The daily escalation budget is spent, so the configured reason "
+                f"default was kept. The rule that would have fired: "
+                f"{' '.join(fired_rules)}"
             )
         else:
             model_key = tier.escalation
             reason = (
-                "An escalation rule fired; selected the configured reason escalation."
+                f"{' '.join(fired_rules)} Selected the configured reason escalation."
             )
 
     chosen = config.models[model_key]

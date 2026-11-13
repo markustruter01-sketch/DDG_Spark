@@ -8,7 +8,7 @@ import logging
 import secrets
 import time
 from typing import Annotated, Any, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from argon2 import PasswordHasher
 from argon2 import exceptions as argon_exceptions
@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 
 from omni.config import get_settings
-from omni.db.connections import reader_session
+from omni.db.platform import platform_session
 
 logger = logging.getLogger("omni.auth")
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -72,10 +72,9 @@ def _decode_session(token: str, secret: str) -> dict[str, Any] | None:
 
 def ensure_admin_account() -> None:
     settings = get_settings()
-    with reader_session() as session:
+    with platform_session() as session:
         found = session.execute(
-            text("SELECT 1 FROM auth_user WHERE email = :email"),
-            {"email": settings.admin_email.lower()},
+            text("SELECT 1 FROM auth_user WHERE role = 'administrator' LIMIT 1")
         ).first()
         if found:
             return
@@ -83,21 +82,34 @@ def ensure_admin_account() -> None:
     generated = settings.admin_password is None
     password = settings.admin_password or secrets.token_urlsafe(24)
     password_hash = password_hasher.hash(password)
-    with reader_session() as session:
+    with platform_session() as session:
         created = session.execute(
-            text("SELECT omni_bootstrap_admin(:email, :password_hash)"),
+            text(
+                """
+                INSERT INTO auth_user
+                  (id, email, password_hash, role, clearance, created_at)
+                SELECT :id, :email, :password_hash, 'administrator',
+                       'restricted', now()
+                WHERE NOT EXISTS (
+                  SELECT 1 FROM auth_user WHERE role = 'administrator'
+                )
+                ON CONFLICT DO NOTHING
+                RETURNING id
+                """
+            ),
             {
+                "id": uuid4(),
                 "email": settings.admin_email.lower(),
                 "password_hash": password_hash,
             },
-        ).scalar_one()
+        ).scalar_one_or_none()
         session.commit()
-    if created and generated:
+    if created is not None and generated:
         logger.warning(
             "Generated initial administrator password (shown once): %s",
             password,
         )
-    elif created:
+    elif created is not None:
         logger.info("Created the configured administrator account.")
 
 
@@ -108,7 +120,7 @@ def require_session(request: Request) -> dict[str, Any]:
     payload = _decode_session(token, get_settings().session_secret)
     if not payload:
         raise HTTPException(status_code=401, detail="Session is invalid or expired.")
-    with reader_session() as session:
+    with platform_session() as session:
         user = (
             session.execute(
                 text(
@@ -136,7 +148,7 @@ def sign_in(
     request: Request,
     response: Response,
 ) -> SessionResponse:
-    with reader_session() as session:
+    with platform_session() as session:
         user = (
             session.execute(
                 text(
@@ -179,3 +191,20 @@ def sign_in(
 @router.get("/session", response_model=SessionResponse)
 def session_info(user: CurrentUser) -> SessionResponse:
     return SessionResponse(**user)
+
+
+@router.post("/sign-out", status_code=204)
+def sign_out(
+    _: CurrentUser,
+    request: Request,
+    response: Response,
+) -> Response:
+    response.delete_cookie(
+        COOKIE_NAME,
+        path="/",
+        secure=request.url.scheme == "https",
+        httponly=True,
+        samesite="lax",
+    )
+    response.status_code = 204
+    return response
