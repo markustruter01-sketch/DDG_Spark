@@ -75,8 +75,7 @@ class _FakeForecastSession:
         histories = {item_name: movement_rows, **(additional_histories or {})}
         self.location_name = location_name
         self.items = [
-            {"item_name": name, "location_name": location_name}
-            for name in histories
+            {"item_name": name, "location_name": location_name} for name in histories
         ]
         self.currents = {
             name: {

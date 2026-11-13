@@ -138,7 +138,9 @@ def _forecast(
         monthly[month] += float(row["quantity"])
     recent = sorted(monthly.items())[-3:]
     if len(recent) < 3:
-        raise ValueError("Not enough history: at least three monthly totals are required.")
+        raise ValueError(
+            "Not enough history: at least three monthly totals are required."
+        )
 
     values = [amount for _, amount in recent]
     count = len(values)

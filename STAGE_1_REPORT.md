@@ -203,3 +203,104 @@ Output: no matches. Model identifiers are confined to the gateway configuration/
 - No unrelated product or design changes were made. API types/hooks were regenerated from FastAPI OpenAPI as part of the required check.
 - No Express, Drizzle or API-side Zod implementation remains. `artifacts/api-server/.replit-artifact/artifact.toml` is retained as Replit artifact metadata only. Node/pnpm remains for React/Vite, workspace tooling and OpenAPI code generation. The existing Zod catalog entry is only used by the ignored mockup sandbox; it is not used by the Python backend.
 - The deployment target was not changed; `.replit` remains `autoscale`, as directed.
+
+## Review fixes
+
+### Forecast defects
+
+1. **Done — unforecastable items no longer fail the items-at-risk tool.** Items with insufficient history or no rising trend are returned in a separate `skipped` list with a plain reason; forecastable items are still ranked. A regression test covers a two-month item alongside a forecastable item.
+2. **Done — forecast evidence matches its calculation.** Evidence includes the current stock record and every movement record used in the three monthly totals. A test verifies all movement records are present and sum to the totals used.
+3. **Done — the date range reflects recent consumption spread.** The fastest plausible rate determines the earliest date, the slowest positive rate determines the latest date, and the linear-trend estimate remains between them. The method is stated in one sentence. The evaluation still places the predicted date within the answer-key window; the answer key was not widened.
+
+### Checks run
+
+Full check command:
+
+```text
+bash scripts/check.sh
+```
+
+Output:
+
+```text
+> @workspace/api-spec@0.0.0 codegen /home/runner/workspace/lib/api-spec
+> cd ../../backend && uv run python -m omni.openapi_export --output openapi.generated.json && cd ../lib/api-spec && orval --config ./orval.config.ts && pnpm -w run typecheck:libs
+
+🍻 orval v8.41.0 - A swagger client generator for typescript
+api-client-react - Cleaning output folder
+api-client-react - 🎉 Api - Your OpenAPI spec has been converted into ready to use orval!
+
+> workspace@0.0.0 typecheck:libs /home/runner/workspace
+> tsc --build
+
+> workspace@0.0.0 typecheck /home/runner/workspace
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+
+> workspace@0.0.0 typecheck:libs /home/runner/workspace
+> tsc --build
+
+Scope: 3 of 6 workspace projects
+artifacts/dashboard typecheck$ tsc -p tsconfig.json --noEmit
+└─ Done in 5.2s
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
+└─ Done in 5.2s
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+└─ Done in 2.4s
+
+> @workspace/dashboard@0.0.0 build /home/runner/workspace/artifacts/dashboard
+> vite build --config vite.config.ts
+
+vite v7.3.7 building client environment for production...
+src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 1775 modules transformed.
+dist/public/index.html                            1.37 kB │ gzip:   0.54 kB
+dist/public/assets/index-Bx8qMnDX.css           108.51 kB │ gzip:  18.56 kB
+dist/public/assets/index-Dfm0THeb.js            359.07 kB │ gzip: 114.17 kB
+dist/public/assets/stage-zero-core-Bu_CT1FP.js  523.51 kB │ gzip: 130.23 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to code-split the application
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 10.13s
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+All checks passed!
+59 files already formatted
+0 errors, 0 warnings, 0 informations
+.......................................................s...............  [100%]
+70 passed, 1 skipped in 6.04s
+```
+
+The dashboard build emitted a non-fatal source-map warning and a bundle-size warning. The skipped test is the optional live-provider smoke test.
+
+Evaluation command:
+
+```text
+cd backend && uv run python -m omni.evals.run
+```
+
+Output:
+
+```json
+{
+  "harness": "supply_logistics",
+  "mock": {
+    "result": "found",
+    "critical_item_identified": true,
+    "runout_date_in_answer_key_window": true,
+    "citation_validity": true,
+    "model": "claude-sonnet-5-5",
+    "routing_reason": "Selected the configured default for the work tier.",
+    "cost_usd": "0.0"
+  },
+  "live": {
+    "result": "skipped",
+    "reason": "No live work-tier adapter is configured."
+  }
+}
+```
+
+No live model was used. The earlier full-check attempts caught two formatting issues in the forecast and its tests; both were corrected before the successful run above.
