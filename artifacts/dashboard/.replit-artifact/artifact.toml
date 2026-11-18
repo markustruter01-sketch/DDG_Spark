@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Omni Dashboard"
+description = "Omni is a DDG dashboard for synthetic, source-linked organisational data and advise-only specialist workspaces."
+version = "1.0.0"
+id = "artifacts/dashboard"
+router = "path"
+
+[[services]]
+name = "web"
+paths = ["/", "/api"]
+localPort = 23183
+
+[services.development]
+run = "bash ../../scripts/dev.sh"
+
+[services.production]
+build = ["bash", "../../scripts/build-project.sh"]
+
+[services.production.run]
+args = ["bash", "../../scripts/serve-project.sh"]
+
+[services.production.health.startup]
+path = "/api/health"
+
+[services.env]
+PORT = "23183"
+BASE_PATH = "/"

@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "uXXv9L7MU9z2Ql2mqtcKZ"
+uri = "file://STAGE_0_REPORT.md"
+type = "text"
+title = "Updated Omni Stage 0 gate review report"
+description = "Three-identity permissions, remaining review fixes, verification commands, and final test output."
+logical_id = "eec0fc2d-2aa1-4ad3-bf53-30b25c6a9a47"
+content_hash = "sha256:28acdf4915d7a20026f852c92dea595cf873e44a87e67bd035f909019afd68db"
+size = 21159
+mtime_ms = 1794533950792
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:f1049b8f-477a-4f2f-b7e7-01fafbab48dd/eec0fc2d-2aa1-4ad3-bf53-30b25c6a9a47/17eec963-f480-49e4-acbe-8dc34de09eee"
+storage_version_token = "1794533987445107"
+content_type = "text/markdown"

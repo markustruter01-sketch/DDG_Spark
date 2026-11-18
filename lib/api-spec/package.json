@@ -1,0 +1,11 @@
+{
+  "name": "@workspace/api-spec",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "codegen": "cd ../../backend && uv run python -m omni.openapi_export --output openapi.generated.json && cd ../lib/api-spec && orval --config ./orval.config.ts && pnpm -w run typecheck:libs"
+  },
+  "devDependencies": {
+    "orval": "^8.41.0"
+  }
+}
