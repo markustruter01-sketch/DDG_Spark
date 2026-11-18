@@ -1,0 +1,56 @@
+[project]
+name = "omni"
+version = "0.1.0"
+description = "Omni Python API and worker"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.1",
+    "anthropic>=2.8.0",
+    "argon2-cffi>=25.1.0",
+    "fastapi>=0.162.5",
+    "geoalchemy2>=0.21.0",
+    "openai>=3.50.0",
+    "pgvector>=0.5.1",
+    "psycopg[binary]>=3.3.9",
+    "pyyaml>=6.0.3",
+    "sqlalchemy>=2.1.8",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+omni-server = "omni.main:main"
+omni-worker = "omni.jobs.worker:main"
+
+[build-system]
+requires = ["uv_build>=0.13.4,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "omni"
+module-root = ""
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pyright>=1.1.414",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["omni"]
+exclude = ["migrations"]

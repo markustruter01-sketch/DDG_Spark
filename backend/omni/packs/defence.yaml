@@ -1,0 +1,14 @@
+name: defence
+harnesses:
+  supply_logistics: Sustainment
+  people: Readiness and People
+  operations: Operations and Plans
+  finance: Finance and Capability
+  assets: Fleet and Estate
+  risk_compliance: Assurance
+entities:
+  org_unit: Unit
+  person: Member
+  skill: Qualification
+  activity: Operation
+  event: Report
