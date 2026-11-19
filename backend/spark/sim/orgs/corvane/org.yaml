@@ -1,0 +1,195 @@
+# Corvane Group: fictional. See docs/WORLD_BRIEF_CORVANE.md.
+# Everything the archive generator knows about this organisation is here.
+# The generator code holds no organisation or sector words.
+
+name: Corvane Group
+code: CVG
+seed: 2006
+archive_start: "2006-01-01"
+as_of: "2026-11-01"
+
+sizes:
+  small:
+    countries: 3
+    sites: 12
+    people: 520
+    assets: 160
+    items: 30
+    items_per_site: 14
+    suppliers: 10
+    activities: 30
+    incidents: 70
+  full:
+    countries: 14
+    sites: 140
+    people: 18500
+    assets: 6000
+    items: 900
+    items_per_site: 40
+    suppliers: 160
+    activities: 900
+    incidents: 4000
+
+# Order matters: the first entries are used by the small size.
+countries:
+  - {name: Australia, code: AU, currency: AUD, opened: 2006}
+  - {name: Singapore, code: SG, currency: SGD, opened: 2013}
+  - {name: Netherlands, code: NL, currency: EUR, opened: 2018, acquired: true}
+  - {name: United States, code: US, currency: USD, opened: 2014}
+  - {name: Indonesia, code: ID, currency: IDR, opened: 2013}
+  - {name: Chile, code: CL, currency: CLP, opened: 2015}
+  - {name: Canada, code: CA, currency: CAD, opened: 2016}
+  - {name: Belgium, code: BE, currency: EUR, opened: 2018, acquired: true}
+  - {name: Germany, code: DE, currency: EUR, opened: 2018, acquired: true}
+  - {name: South Africa, code: ZA, currency: ZAR, opened: 2017}
+  - {name: Peru, code: PE, currency: PEN, opened: 2016}
+  - {name: Malaysia, code: MY, currency: MYR, opened: 2014}
+  - {name: New Zealand, code: NZ, currency: NZD, opened: 2012}
+  - {name: Norway, code: "NO", currency: NOK, opened: 2019, acquired: true}
+
+divisions:
+  - {name: Logistics, since: 2006, kinds: [Depot, Rail yard, Port, Warehouse]}
+  - {name: Resources, since: 2009, kinds: [Mine, Processing plant, Camp]}
+  - {name: Energy, since: 2011, kinds: [Compressor station, Terminal, Pipeline segment]}
+  - {name: Infrastructure Services, since: 2009, kinds: [Workshop, Project office]}
+
+# Share of sites with each trait. The site register shows them as Y/N columns.
+traits:
+  remote: 0.45
+  coastal: 0.4
+
+place_words: [Ridge, Creek, Harbour, Point, Flats, Bluff, Basin, Downs, Hill,
+  Bay, Gorge, Plains, Range, Reach, Springs, Vale, Crossing, Head, Sound, Well]
+place_prefixes: [North, South, East, West, Red, Iron, Salt, Black, Long, Stone,
+  Copper, Granite, Silver, Wattle, Mallee, Coral, Ash, Pine, Cedar, Quartz]
+
+first_names: [James, Olivia, Liam, Amelia, Noah, Isla, Jack, Mia, William, Ava,
+  Thomas, Grace, Lucas, Chloe, Henry, Zoe, Ethan, Ruby, Mason, Ella, Daniel,
+  Priya, Arjun, Wei, Mei, Hiro, Yuki, Sofia, Mateo, Lars, Anke, Pieter, Femke,
+  Kofi, Thandi, Aroha, Tane, Nurul, Rizal, Carmen, Diego, Ingrid, Sven, Fatima]
+last_names: [Smith, Jones, Williams, Brown, Wilson, Taylor, Nguyen, Tan, Lim,
+  Chen, Patel, Singh, Kumar, Martin, Anderson, Thompson, White, Walker, Harris,
+  Lee, Ryan, Kelly, Murphy, Clarke, De Vries, Jansen, Bakker, Visser, Hansen,
+  Larsen, Mokoena, Naidoo, Ngata, Rahman, Santos, Rojas, Silva, Morales, Schmidt]
+
+skills:
+  - {name: Confined space entry, validity_months: 24}
+  - {name: Working at heights, validity_months: 24}
+  - {name: High voltage switching, validity_months: 36}
+  - {name: Site safety induction, validity_months: 12}
+  - {name: Crane operation licence, validity_months: 60}
+  - {name: First aid, validity_months: 36}
+
+roles:
+  - {title: Heavy diesel fitter, weight: 9, skills: [Site safety induction, Working at heights]}
+  - {title: Electrician, weight: 6, skills: [Site safety induction, High voltage switching]}
+  - {title: Process technician, weight: 6, skills: [Site safety induction, Confined space entry]}
+  - {title: Rigger, weight: 4, skills: [Site safety induction, Working at heights, Crane operation licence]}
+  - {title: Operator, weight: 12, skills: [Site safety induction]}
+  - {title: Storeperson, weight: 3, skills: [Site safety induction]}
+  - {title: Planner, weight: 3, skills: [Site safety induction]}
+  - {title: Engineer, weight: 4, skills: [Site safety induction, First aid]}
+  - {title: Supervisor, weight: 3, skills: [Site safety induction, First aid, Confined space entry]}
+  - {title: Administrator, weight: 2, skills: [First aid]}
+
+annual_leaver_rate: 0.09
+
+# The same models are coded differently in each maintenance system.
+asset_models:
+  - {model_no: KSB-ETA-150, description: Centrifugal pump, weight: 6}
+  - {model_no: CAT-793F, description: Haul truck, weight: 5}
+  - {model_no: ATLAS-GA90, description: Air compressor, weight: 3}
+  - {model_no: GRUNDFOS-CR95, description: Booster pump, weight: 3}
+  - {model_no: ABB-ACS880, description: Variable speed drive, weight: 3}
+  - {model_no: LIEB-LTM1100, description: Mobile crane, weight: 1}
+  - {model_no: SIEM-SGT400, description: Gas turbine, weight: 1}
+  - {model_no: TOY-8FBE20, description: Forklift, weight: 3}
+annual_failure_rate: 0.6
+
+items:
+  - {name: Hydraulic return filter assembly, unit: each}
+  - {name: Brake wear sensor, unit: each}
+  - {name: Cooling fan belt, unit: each}
+  - {name: Fuel water separator, unit: each}
+  - {name: Air intake element, unit: each}
+  - {name: Grease cartridge, unit: each}
+  - {name: Cab door seal, unit: each}
+  - {name: Work lamp module, unit: each}
+  - {name: Pump mechanical seal, unit: each}
+  - {name: Bearing 6312, unit: each}
+  - {name: Gasket set, unit: set}
+  - {name: Engine oil 15W-40, unit: litre}
+  - {name: Hydraulic oil ISO 46, unit: litre}
+  - {name: Diesel exhaust fluid, unit: litre}
+  - {name: Conveyor idler, unit: each}
+  - {name: Wear liner plate, unit: each}
+  - {name: Safety glasses, unit: box}
+  - {name: Nitrile gloves, unit: box}
+  - {name: Welding rod, unit: kg}
+  - {name: Cable tie pack, unit: pack}
+  - {name: Valve actuator kit, unit: each}
+  - {name: Instrument transmitter, unit: each}
+  - {name: Tyre 40.00R57, unit: each}
+  - {name: Battery 12V, unit: each}
+  - {name: Coolant concentrate, unit: litre}
+  - {name: Pipe clamp, unit: each}
+  - {name: Pressure gauge, unit: each}
+  - {name: Drive belt set, unit: set}
+  - {name: Light vehicle tyre, unit: each}
+  - {name: Spill kit, unit: each}
+
+supplier_names: [Meridian Industrial Supply, Bluegate Parts, Kestrel Hydraulics,
+  Northline Bearings, Tasman Fluids, Harbourview Safety, Coastline Electrical,
+  Redrock Wear Parts, Pacific Valve Co, Summit Tyres, Ironbark Fasteners,
+  Altona Lubricants, Granite Instruments, Westwind Filters, Calder Pumps]
+
+# Projects, campaigns and shifts that need people and equipment.
+activity_kinds: [Shutdown, Campaign, Project, Inspection]
+crews: [Mechanical crew A, Mechanical crew B, Electrical crew, Rigging crew, Shutdown crew]
+equipment: [Crane LTM-01, Crane LTM-02, Scaffold set 1, Welding rig 3, Hydro-test unit]
+
+# Messy history. Each line changes how one source system exports its data.
+timeline:
+  multi_currency_from: 2013
+  hr_merge: "2015-07-01"           # three old HR systems replaced by one
+  hr_duplicate_share: 0.04         # migrated people who appear twice afterwards
+  hr_missing_legacy_ref: 0.3       # migrated people with no link to their old id
+  restructure: "2016-07-01"        # sites renamed
+  rename_share: 0.25
+  erp_cutover: "2021-07-01"        # new finance system; chart of accounts changes
+  disruption: {start: "2020-03-01", end: "2020-09-30", missing_share: 0.6}
+  late_report_share: 0.05
+  stock_count_conflict_share: 0.06
+  closed_site_share: 0.08
+  document_surge: {year: 2023, factor: 4}
+
+maintenance_systems:
+  - {name: maint_a, from: 2009, holds: default}
+  - {name: maint_b, from: 2011, holds: {division: Energy}}
+  - {name: maint_c, from: 2018, holds: {acquired: true}}
+
+contracts: [Mechanical maintenance services, Electrical maintenance services,
+  Site cleaning, Camp services, Freight services, Scaffolding hire,
+  Equipment rental, Laboratory services, Security services, Waste removal]
+cost_centres_per_contract: 3
+
+# Free text. {site}, {model}, {item}, {crew} and {date} are filled in.
+incident_templates:
+  - "Near miss at {site}: light vehicle reversed close to a pedestrian at the gate. No injury."
+  - "Minor hand injury at {site} while changing a {item}. First aid given, returned to work."
+  - "Hydrocarbon spill of about 20 litres at {site}. Contained with spill kit."
+  - "{model} stopped unexpectedly at {site}. Reset and returned to service after checks."
+  - "Dropped object from height at {site}. Exclusion zone was in place, no injury."
+  - "Slip on wet walkway at {site}. Area signed and cleaned."
+  - "Alarm on {model} at {site} during start-up. Sensor replaced."
+  - "Contractor entered a restricted area at {site} without a permit. Work stopped and briefed."
+shift_phrases:
+  - "Production steady. No safety events."
+  - "{crew} completed planned work orders."
+  - "Waiting on parts: {item}."
+  - "Weather delay of two hours in the afternoon."
+  - "{model} down for inspection, back in service by end of shift."
+  - "Short-handed, two absences."
+  - "Housekeeping and toolbox talk completed."
+  - "Night shift handover done, nothing outstanding."
+audit_areas: [Permits, Training records, Plant isolation, Housekeeping, Contractor management, Records]

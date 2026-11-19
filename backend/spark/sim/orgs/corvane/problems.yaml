@@ -1,0 +1,85 @@
+# Planted problems for Corvane Group (docs/WORLD_BRIEF_CORVANE.md).
+# The generator writes each one into the source files and records the exact
+# records involved in the answer key, which sits outside the archive folder.
+# Agents never read this file or the answer key; only evaluation does.
+#
+# Site selectors: division, trait (Y in the site register), index (nth match).
+
+- id: part_runout
+  harness: supply_logistics
+  kind: consumption_runout
+  story: A critical spare part whose rising use will empty the store within weeks.
+  site: {division: Resources, trait: remote, index: 0}
+  item: Hydraulic return filter assembly
+  days_to_runout: 35
+  check: {warning_days: 60}
+
+- id: supplier_lead_time
+  harness: supply_logistics
+  kind: lead_time_drift
+  story: A supplier whose delivery times have been quietly lengthening for a year.
+  supplier: Meridian Industrial Supply
+  base_days: 14
+  end_days: 40
+  check: {ratio: 1.6}
+
+- id: certification_wave
+  harness: people
+  kind: expiry_cluster
+  story: Many certifications at one site expire just before a planned shutdown.
+  site: {division: Resources, trait: remote, index: 0}
+  skill: Confined space entry
+  activity: {name: Plant shutdown 2027, kind: Shutdown, starts_in_days: 75, days: 14}
+  expiring_share: 0.45
+  min_holders: 12
+  check: {min_share: 0.9}
+
+- id: trade_turnover
+  harness: people
+  kind: turnover_rise
+  story: Rising turnover in one trade at remote sites.
+  role: Heavy diesel fitter
+  trait: remote
+  factor: 3
+  check: {ratio: 2.0, min_leavers: 5}
+
+- id: crew_clash
+  harness: operations
+  kind: resource_double_booking
+  story: The expansion project needs a crew and a crane that two other projects also booked.
+  site: {division: Energy, index: 0}
+  activity: {name: Northern pipeline expansion, kind: Project, starts_in_days: 45, days: 120}
+  resources: [Rigging crew, Crane LTM-01]
+  competing: 2
+  check: {max_overlap: 2}
+
+- id: contract_overspend
+  harness: finance
+  kind: split_overspend
+  story: A maintenance contract trending well over budget across three cost centres nobody views together.
+  contract: Mechanical maintenance services
+  ratio: 1.4
+  check: {ratio: 1.25}
+
+- id: coastal_pump_failures
+  harness: assets
+  kind: failure_rate_by_trait
+  story: A pump model failing at twice the rate at coastal sites.
+  model: KSB-ETA-150
+  trait: coastal
+  factor: 2.0
+  years: 5
+  check: {ratio: 1.8, min_failures: 10}
+
+- id: repeat_fault
+  harness: risk_compliance
+  kind: same_fault_reports
+  story: Three incident reports from different sites describe the same underlying fault.
+  model: GRUNDFOS-CR95
+  sites: 3
+  within_days: 150
+  wording:
+    - "Booster pump {model} tripped on high vibration; coupling insert found split."
+    - "During the night shift the {model} unit shook badly and stopped. Fitter reported the flexible coupling element had failed."
+    - "Unplanned stop of {model}. Vibration alarm, then trip. Coupling spider worn through on inspection."
+  check: {min_sites: 3, window_days: 365}
