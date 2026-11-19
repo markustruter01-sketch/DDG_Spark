@@ -1,0 +1,232 @@
+# Frozen copy of backend/spark/model/schema.yaml as it was when migration
+# 0001_foundations was written (commit c73ed55, 12 November 2026).
+# 0001 builds its tables from this file, never from the live schema, so a
+# fresh database goes through the same steps as an existing one.
+# Never edit this file. Change the live schema with a new migration.
+version: 1
+common_entity_fields:
+  id: {type: uuid, primary_key: true}
+  source_id: {type: uuid, nullable: false, references: raw_record.id}
+  sensitivity: {type: sensitivity, nullable: false}
+  valid_from: {type: date, nullable: false}
+  valid_to: {type: date, nullable: true}
+  confidence: {type: confidence, nullable: false}
+entities:
+  org_unit:
+    fields:
+      name: {type: text, nullable: false}
+      kind: {type: text, nullable: false}
+      parent_org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
+      location_id: {type: uuid, nullable: true, references: location.id}
+  person:
+    fields:
+      display_name: {type: text, nullable: false}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      role_id: {type: uuid, nullable: true, references: role.id}
+      employment_type: {type: text, nullable: false}
+      start_date: {type: date, nullable: false}
+      end_date: {type: date, nullable: true}
+  role:
+    fields:
+      title: {type: text, nullable: false}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      required_skills: {type: json, nullable: false}
+  skill:
+    fields:
+      name: {type: text, nullable: false}
+      validity_months: {type: integer, nullable: true}
+  person_skill:
+    fields:
+      person_id: {type: uuid, nullable: false, references: person.id}
+      skill_id: {type: uuid, nullable: false, references: skill.id}
+      awarded_on: {type: date, nullable: false}
+      expires_on: {type: date, nullable: true}
+  location:
+    fields:
+      name: {type: text, nullable: false}
+      kind: {type: text, nullable: false}
+      country: {type: text, nullable: false}
+      geometry: {type: geometry, nullable: true}
+  asset:
+    fields:
+      name: {type: text, nullable: false}
+      asset_type: {type: text, nullable: false}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      location_id: {type: uuid, nullable: true, references: location.id}
+      commissioned_on: {type: date, nullable: true}
+      status: {type: text, nullable: false}
+  maintenance_job:
+    fields:
+      asset_id: {type: uuid, nullable: false, references: asset.id}
+      kind: {type: text, nullable: false}
+      opened_on: {type: date, nullable: false}
+      closed_on: {type: date, nullable: true}
+      fault: {type: text, nullable: true}
+  item:
+    fields:
+      name: {type: text, nullable: false}
+      category: {type: text, nullable: false}
+      unit: {type: text, nullable: false}
+  stock_level:
+    fields:
+      item_id: {type: uuid, nullable: false, references: item.id}
+      location_id: {type: uuid, nullable: false, references: location.id}
+      quantity: {type: numeric, nullable: false}
+      as_of: {type: date, nullable: false}
+  stock_movement:
+    fields:
+      item_id: {type: uuid, nullable: false, references: item.id}
+      from_location_id: {type: uuid, nullable: true, references: location.id}
+      to_location_id: {type: uuid, nullable: true, references: location.id}
+      quantity: {type: numeric, nullable: false}
+      moved_on: {type: date, nullable: false}
+      maintenance_job_id: {type: uuid, nullable: true, references: maintenance_job.id}
+  supplier:
+    fields:
+      name: {type: text, nullable: false}
+      country: {type: text, nullable: false}
+  purchase_order:
+    fields:
+      supplier_id: {type: uuid, nullable: false, references: supplier.id}
+      item_id: {type: uuid, nullable: false, references: item.id}
+      quantity: {type: numeric, nullable: false}
+      ordered_on: {type: date, nullable: false}
+      promised_on: {type: date, nullable: true}
+      received_on: {type: date, nullable: true}
+      amount: {type: numeric, nullable: true}
+  contract:
+    fields:
+      title: {type: text, nullable: false}
+      supplier_id: {type: uuid, nullable: false, references: supplier.id}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      starts_on: {type: date, nullable: false}
+      ends_on: {type: date, nullable: true}
+      value: {type: numeric, nullable: true}
+  budget_line:
+    fields:
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      category: {type: text, nullable: false}
+      period: {type: text, nullable: false}
+      amount: {type: numeric, nullable: false}
+  transaction:
+    fields:
+      budget_line_id: {type: uuid, nullable: true, references: budget_line.id}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      contract_id: {type: uuid, nullable: true, references: contract.id}
+      occurred_on: {type: date, nullable: false}
+      amount: {type: numeric, nullable: false}
+      description: {type: text, nullable: true}
+  activity:
+    fields:
+      name: {type: text, nullable: false}
+      kind: {type: text, nullable: false}
+      parent_activity_id: {type: uuid, nullable: true, references: activity.id}
+      org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
+      location_id: {type: uuid, nullable: true, references: location.id}
+      planned_start: {type: timestamp, nullable: true}
+      planned_end: {type: timestamp, nullable: true}
+      actual_start: {type: timestamp, nullable: true}
+      actual_end: {type: timestamp, nullable: true}
+      status: {type: text, nullable: false}
+  activity_requirement:
+    fields:
+      activity_id: {type: uuid, nullable: false, references: activity.id}
+      role_id: {type: uuid, nullable: true, references: role.id}
+      asset_id: {type: uuid, nullable: true, references: asset.id}
+      item_id: {type: uuid, nullable: true, references: item.id}
+      quantity: {type: numeric, nullable: true}
+      needed_from: {type: timestamp, nullable: true}
+      needed_to: {type: timestamp, nullable: true}
+  event:
+    fields:
+      kind: {type: text, nullable: false}
+      occurred_on: {type: timestamp, nullable: false}
+      org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
+      location_id: {type: uuid, nullable: true, references: location.id}
+      asset_id: {type: uuid, nullable: true, references: asset.id}
+      summary: {type: text, nullable: false}
+  document:
+    fields:
+      title: {type: text, nullable: false}
+      kind: {type: text, nullable: false}
+      authored_on: {type: date, nullable: true}
+      org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
+      full_text: {type: text, nullable: false}
+  risk:
+    fields:
+      title: {type: text, nullable: false}
+      category: {type: text, nullable: false}
+      org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
+      raised_on: {type: date, nullable: false}
+      severity: {type: text, nullable: false}
+      status: {type: text, nullable: false}
+system_tables:
+  source:
+    fields:
+      id: {type: uuid, primary_key: true}
+      owner: {type: text, nullable: false}
+      format: {type: text, nullable: false}
+      time_span: {type: json, nullable: true}
+      sensitivity: {type: sensitivity, nullable: false}
+      checksum: {type: text, nullable: false}
+      landed_at: {type: timestamp, nullable: false}
+  raw_record:
+    fields:
+      id: {type: uuid, primary_key: true}
+      source_id: {type: uuid, nullable: false, references: source.id}
+      record_key: {type: text, nullable: false}
+      payload: {type: json, nullable: false}
+      landed_at: {type: timestamp, nullable: false}
+  ledger:
+    fields:
+      id: {type: uuid, primary_key: true}
+      question: {type: text, nullable: false}
+      tool_calls: {type: json, nullable: false}
+      model: {type: text, nullable: true}
+      answer: {type: text, nullable: true}
+      sources: {type: json, nullable: false}
+      human_decision: {type: json, nullable: true}
+      created_at: {type: timestamp, nullable: false}
+  egress_log:
+    fields:
+      id: {type: uuid, primary_key: true}
+      model: {type: text, nullable: false}
+      what_sent: {type: json, nullable: false}
+      reason: {type: text, nullable: false}
+      cost_usd: {type: numeric, nullable: false}
+      tokens_in: {type: integer, nullable: false}
+      tokens_out: {type: integer, nullable: false}
+      created_at: {type: timestamp, nullable: false}
+  scratch:
+    fields:
+      id: {type: uuid, primary_key: true}
+      generated_by: {type: text, nullable: false}
+      payload: {type: json, nullable: false}
+      is_ai_generated: {type: boolean, nullable: false}
+      created_at: {type: timestamp, nullable: false}
+support_tables:
+  auth_user:
+    fields:
+      id: {type: uuid, primary_key: true}
+      email: {type: text, nullable: false, unique: true}
+      password_hash: {type: text, nullable: false}
+      role:
+        type: text
+        nullable: false
+        allowed: [administrator, analyst, viewer]
+      clearance: {type: sensitivity, nullable: false}
+      created_at: {type: timestamp, nullable: false}
+  job:
+    fields:
+      id: {type: uuid, primary_key: true}
+      job_type: {type: text, nullable: false}
+      payload: {type: json, nullable: false}
+      status:
+        type: text
+        nullable: false
+        allowed: [queued, running, done, failed]
+      attempts: {type: integer, nullable: false}
+      created_at: {type: timestamp, nullable: false}
+      started_at: {type: timestamp, nullable: true}
+      finished_at: {type: timestamp, nullable: true}
+      error: {type: text, nullable: true}
