@@ -56,6 +56,7 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 - The database currently allows exactly one administrator. Revisit this when user management is built.
 - The agent identity can read every entity row regardless of the signed-in user's clearance. Enforce clearance when the agent tool layer matures; do not change this during Stage 1.
 - Derived platform and agent passwords must be reset by a migration if the owner database credential changes.
+- Sign-in is skipped during development: `scripts/dev.sh` (the Run button) sets `SPARK_DEV_SKIP_SIGN_IN=1`, so every request acts as the administrator. The published app (`scripts/serve-project.sh`) never sets it. Remove it from `scripts/dev.sh` to turn sign-in back on.
 - Spark was called Omni until 19 November 2026. Database-side names keep the old name on purpose: the logins `omni_platform` and `omni_agent`, the `omni_*` database functions, the `omni-database-role:` password string, the `omni-admin-bootstrap` lock and the `omni:` prefix for stable record IDs. Renaming them would change passwords, permissions or record IDs. Do not rename them. Everything else uses Spark.
 
 ## Brand: Night Glass
