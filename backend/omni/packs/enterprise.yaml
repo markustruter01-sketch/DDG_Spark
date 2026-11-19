@@ -1,3 +1,7 @@
+# Enterprise pack: labels and thresholds for a large commercial organisation.
+# First used for Corvane Group. A pack may relabel and add; it may not change
+# or remove anything in backend/omni/model/schema.yaml.
+# Rules are plain numbers so an administrator can tune them.
 name: enterprise
 harnesses:
   supply_logistics: Supply and Logistics

@@ -1,3 +1,7 @@
+# Which model serves each tier. Changing a model is an edit here, nothing else.
+# Prices are per million tokens. They are left at 0 on purpose: fill them in
+# from the provider's current price list so the budget and spend views are real.
+
 [router]
 minimum_harnesses = 3
 citation_failures = 2
