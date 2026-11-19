@@ -1,7 +1,7 @@
 # Stage 2: Synthetic organisations
 
-> Part 1 (generator and Corvane, tasks 1–6 and 8) built 19 November 2026.
-> Part 2 (Blue Team, task 7) is next.
+> All tasks built 19–20 November 2026. Report: `reports/STAGE_2_REPORT.md`.
+> Gate item 6 is confirmed in Replit after merge.
 
 ## Goal
 

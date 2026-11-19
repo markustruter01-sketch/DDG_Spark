@@ -375,6 +375,27 @@ def matches(kind: str, expected: dict[str, Any], got: Finding) -> bool:
     raise ValueError(kind)
 
 
+def explained_by(kind: str, expected: dict[str, Any], got: Finding) -> bool:
+    """Is a flagged finding the planted problem itself or a direct effect of it?
+
+    Lapsing certifications show up against every later activity at the same
+    site, and a clash can pull in other bookings that overlap it. Those are
+    the same problem, not extras.
+    """
+    if kind == "expiry_cluster":
+        same_place = (got["site_code"], got["skill"]) == (
+            expected["site_code"],
+            expected["skill"],
+        )
+        return same_place and set(got["worker_ids"]) <= set(expected["worker_ids"])
+    if kind == "resource_double_booking":
+        planted = {expected["activity_code"], *expected["competing_activity_codes"]}
+        return got["resource"] in expected["resources"] and bool(
+            planted & set(got["activity_codes"])
+        )
+    return matches(kind, expected, got)
+
+
 def recover(
     root: Path, as_of: date, answers: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -399,7 +420,11 @@ def recover(
                 "kind": kind,
                 "recovered": bool(hits),
                 "flagged": len(flagged[key]),
-                "extras": [f for f in flagged[key] if f not in hits],
+                "extras": [
+                    f
+                    for f in flagged[key]
+                    if not explained_by(kind, answer["finding"], f)
+                ],
             }
         )
     return results
