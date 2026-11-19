@@ -466,7 +466,13 @@ def schedule_work(
 def _build_stock(world: World) -> None:
     org = world.config.org
     counts = world.config.counts
-    items = cast(list[dict[str, Any]], org["items"])[: counts["items"]]
+    listed = cast(list[dict[str, Any]], org["items"])
+    items: list[dict[str, Any]] = []
+    for i in range(counts["items"]):
+        base = listed[i % len(listed)]
+        variant = i // len(listed)
+        name = str(base["name"]) + (f" type {variant + 1}" if variant else "")
+        items.append({**base, "name": name})
     world.items = [{"code": f"IT{i + 1:05d}", **item} for i, item in enumerate(items)]
     names = list(cast(list[str], org["supplier_names"]))
     world.suppliers = [

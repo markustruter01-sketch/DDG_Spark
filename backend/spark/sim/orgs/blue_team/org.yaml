@@ -1,0 +1,166 @@
+# Blue Team: fictional land force of the fictional Republic of Aldmark.
+# See docs/WORLD_BRIEF_BLUE_TEAM.md. Same generator as Corvane; only this
+# file and problems.yaml differ. Administrative data only.
+
+name: Blue Team
+code: BLU
+seed: 2011
+archive_start: "2006-01-01"
+as_of: "2026-11-01"
+
+sizes:
+  small:
+    countries: 3
+    sites: 12
+    people: 480
+    assets: 150
+    items: 24
+    items_per_site: 12
+    suppliers: 8
+    activities: 30
+    incidents: 60
+  full:
+    countries: 3
+    sites: 60
+    people: 9000
+    assets: 3000
+    items: 400
+    items_per_site: 24
+    suppliers: 60
+    activities: 600
+    incidents: 2500
+
+countries:
+  - {name: Aldmark, code: AM, currency: ALD, opened: 2006}
+  - {name: Forward operating area, code: FA, currency: USD, opened: 2014}
+  - {name: Overseas training area, code: TA, currency: USD, opened: 2019, acquired: true}
+
+divisions:
+  - {name: 1st Brigade, since: 2006, kinds: [Barracks, Training area]}
+  - {name: Sustainment Brigade, since: 2006, kinds: [Depot, Workshop, Port]}
+  - {name: Aviation Group, since: 2011, kinds: [Airfield, Hangar]}
+  - {name: Training Command, since: 2006, kinds: [School, Range]}
+
+traits:
+  remote: 0.45
+  coastal: 0.4
+
+place_words: [Camp, Barracks, Lines, Field, Point, Ridge, Station, Heath,
+  Plain, Cove, Fort, Hollow, Moor, Crossing, Bay, Downs, Marsh, Gap, Hill, Spur]
+place_prefixes: [Elder, Grey, Ash, Raven, Oak, Thorn, Kestrel, Falcon, Hawk,
+  Wolf, Birch, Holly, Iron, Stone, Larch, Rowan, Heron, Linden, Alder, Willow]
+
+first_names: [Aled, Bryn, Cara, Dafydd, Elin, Ffion, Gareth, Hana, Ifan, Jory,
+  Keira, Lowri, Mared, Nia, Osian, Rhys, Seren, Tomos, Ula, Wyn, Ava, Leo,
+  Maya, Noor, Omar, Pia, Quinn, Rosa, Sami, Tara, Yara, Zane]
+last_names: [Aldred, Brennan, Carrow, Dunmore, Ellery, Fenwick, Garrow,
+  Hallam, Ingram, Jessop, Kerrow, Lindqvist, Marlow, Norcott, Orrin, Pellow,
+  Quarrie, Rendell, Selby, Tregear, Ufton, Varley, Wickham, Yelland]
+
+skills:
+  - {name: Heavy vehicle licence, validity_months: 36}
+  - {name: Dangerous goods handling, validity_months: 24}
+  - {name: Annual fitness assessment, validity_months: 12}
+  - {name: First aid, validity_months: 36}
+  - {name: Working at heights, validity_months: 24}
+  - {name: Crane operation licence, validity_months: 60}
+
+roles:
+  - {title: Vehicle mechanic, weight: 9, skills: [Annual fitness assessment, Heavy vehicle licence]}
+  - {title: Driver, weight: 8, skills: [Annual fitness assessment, Heavy vehicle licence]}
+  - {title: Storeman, weight: 5, skills: [Annual fitness assessment, Dangerous goods handling]}
+  - {title: Electronics technician, weight: 4, skills: [Annual fitness assessment, Working at heights]}
+  - {title: Aircraft technician, weight: 4, skills: [Annual fitness assessment, Working at heights]}
+  - {title: Medic, weight: 3, skills: [Annual fitness assessment, First aid]}
+  - {title: Signaller, weight: 4, skills: [Annual fitness assessment]}
+  - {title: Clerk, weight: 3, skills: [Annual fitness assessment]}
+  - {title: Section commander, weight: 4, skills: [Annual fitness assessment, First aid]}
+  - {title: Plant operator, weight: 3, skills: [Annual fitness assessment, Crane operation licence]}
+
+annual_leaver_rate: 0.1
+
+asset_models:
+  - {model_no: GEN-60, description: Generator 60 kVA, weight: 6}
+  - {model_no: MPV-4, description: Medium protected vehicle, weight: 5}
+  - {model_no: LT-2, description: Light truck, weight: 5}
+  - {model_no: WPU-3, description: Water purification unit, weight: 3}
+  - {model_no: RTF-4, description: Rough terrain forklift, weight: 3}
+  - {model_no: FK-1, description: Field kitchen, weight: 2}
+  - {model_no: CT-1, description: Crane truck, weight: 1}
+annual_failure_rate: 0.7
+
+items:
+  - {name: Track pad set, unit: set}
+  - {name: Tyre 395/85R20, unit: each}
+  - {name: Engine oil 15W-40, unit: litre}
+  - {name: Hydraulic oil ISO 46, unit: litre}
+  - {name: Air filter element, unit: each}
+  - {name: Fuel filter, unit: each}
+  - {name: Battery 24V, unit: each}
+  - {name: Alternator belt, unit: each}
+  - {name: Brake pad set, unit: set}
+  - {name: Coolant concentrate, unit: litre}
+  - {name: Water purifier membrane, unit: each}
+  - {name: Generator fuel pump, unit: each}
+  - {name: Ration pack, unit: box}
+  - {name: Bottled water, unit: pallet}
+  - {name: Tent repair kit, unit: each}
+  - {name: Radio battery, unit: each}
+  - {name: Work gloves, unit: box}
+  - {name: Cable tie pack, unit: pack}
+  - {name: Wheel nut set, unit: set}
+  - {name: Lamp module, unit: each}
+  - {name: Seal kit, unit: set}
+  - {name: Drive belt set, unit: set}
+  - {name: Spill kit, unit: each}
+  - {name: First aid restock pack, unit: each}
+
+supplier_names: [Aldmark Fleet Parts, Northfield Tyres, Corran Lubricants,
+  Vale Industrial Supply, Halden Electrical, Morrow Filtration, Pennick
+  Batteries, Greyford Provisions, Ashcombe Hydraulics, Tallow Field Services]
+
+activity_kinds: [Exercise, Maintenance stand-down, Course, Inspection]
+crews: [Recovery section, Workshop team A, Workshop team B, Transport troop, Field kitchen team]
+equipment: [Crane truck CT-1, Low loader 2, Generator set 7, Water point 1, Field workshop 3]
+
+timeline:
+  multi_currency_from: 2014
+  hr_merge: "2015-04-01"
+  hr_duplicate_share: 0.05
+  hr_missing_legacy_ref: 0.25
+  restructure: "2017-07-01"
+  rename_share: 0.3
+  erp_cutover: "2022-07-01"
+  disruption: {start: "2020-04-01", end: "2020-08-31", missing_share: 0.5}
+  late_report_share: 0.04
+  stock_count_conflict_share: 0.05
+  closed_site_share: 0.08
+  document_surge: {year: 2024, factor: 3}
+
+maintenance_systems:
+  - {name: maint_a, from: 2008, holds: default}
+  - {name: maint_b, from: 2011, holds: {division: Aviation Group}}
+  - {name: maint_c, from: 2019, holds: {acquired: true}}
+
+contracts: [Garrison maintenance services, Catering services, Cleaning services,
+  Vehicle hire, Freight services, Waste removal, Grounds maintenance,
+  Accommodation services, Laundry services, Security services]
+cost_centres_per_contract: 3
+
+incident_templates:
+  - "Vehicle reversed close to a pedestrian at the {site} gate. No injury."
+  - "Minor hand injury at {site} while fitting a {item}. First aid given."
+  - "Fuel spill of about 15 litres at {site}. Contained with spill kit."
+  - "{model} stopped unexpectedly at {site}. Reset and returned to service."
+  - "Slip on wet ground at {site}. Area signed."
+  - "Warning light on {model} at {site} during start-up. Sensor replaced."
+  - "Unauthorised entry to a store at {site}. Area secured and briefed."
+shift_phrases:
+  - "Routine day. No reportable events."
+  - "{crew} completed scheduled work."
+  - "Awaiting parts: {item}."
+  - "Weather stopped outdoor work for two hours."
+  - "{model} off the road for inspection, back by end of day."
+  - "Two members on leave, tasks reallocated."
+  - "Stores check and safety brief completed."
+audit_areas: [Stores accounting, Training records, Vehicle documentation, Housekeeping, Contract management, Records]
