@@ -1,0 +1,168 @@
+# Column-name hints for proposing how a source file maps to the data model.
+# Generic vocabulary only: no organisation or sector words. A hint matches a
+# column when the column's words (lower case, split on anything that is not a
+# letter or digit) contain the hint's words in order.
+#
+# For each entity:
+#   file:   words in the file name or folder that suggest this entity
+#   fields: data model field -> column hints. Date fields only match columns
+#           whose values are all dates; numeric fields only numeric columns.
+#   refs:   other entities this file points at -> column hints (codes, IDs)
+#
+# These are a starting proposal. A person approves or corrects every mapping.
+
+org_unit:
+  file: [site, register, location]
+  fields:
+    name: [site name, name]
+    kind: [site type, type, division]
+  refs:
+    org_unit: [site code]
+
+person:
+  file: [worker, employee, staff, member, people]
+  fields:
+    display_name: [full name, surname, given names]
+    start_date: [hire date, start date]
+    end_date: [termination date, end date]
+    role_title: [job title, position]
+  refs:
+    org_unit: [site code, site]
+    person: [worker id, emp no, legacy ref]
+
+person_skill:
+  file: [certification, qualification, licence, skill]
+  fields:
+    skill_name: [certification, qualification, skill]
+    awarded_on: [issued, awarded]
+    expires_on: [expires, expiry]
+  refs:
+    person: [worker id, emp no]
+
+asset:
+  file: [asset, equipment, tag, register]
+  fields:
+    name: [description, equip class]
+    model: [oem model, manufacturer model, oem]
+    commissioned_on: [commissioned, install date, in service]
+    status: [status, out of service]
+  refs:
+    asset: [asset id, equipment no, tag]
+    org_unit: [site code, functional location]
+
+maintenance_job:
+  file: [work order, notification, job]
+  fields:
+    kind: [wo type, notif type, job type]
+    opened_on: [raised, created, date]
+    cost: [cost, amount]
+  refs:
+    maintenance_job: [wo number, notification, job id]
+    asset: [asset id, equipment no, tag]
+
+item:
+  file: [item, catalogue]
+  fields:
+    name: [description]
+    unit: [unit]
+  refs:
+    item: [item code]
+
+stock_level:
+  file: [count, stock, emailed]
+  fields:
+    as_of: [count date, counted]
+    quantity: [quantity, qty on hand]
+  refs:
+    org_unit: [site code, site]
+    item: [item code, item]
+
+stock_movement:
+  file: [movement]
+  fields:
+    moved_on: [date]
+    direction: [movement]
+    quantity: [quantity]
+  refs:
+    org_unit: [site code]
+    item: [item code]
+
+supplier:
+  file: [supplier, vendor]
+  fields:
+    name: [name]
+  refs:
+    supplier: [supplier code]
+
+purchase_order:
+  file: [purchase order, order]
+  fields:
+    ordered_on: [order date]
+    promised_on: [promised date]
+    received_on: [received date]
+    quantity: [quantity]
+    unit_price: [unit price]
+  refs:
+    purchase_order: [po number]
+    supplier: [supplier code]
+    item: [item code]
+    org_unit: [site code]
+
+contract:
+  file: [contract]
+  fields:
+    title: [description]
+  refs:
+    contract: [contract no]
+    supplier: [supplier code]
+
+budget_line:
+  file: [budget]
+  fields:
+    period: [fiscal year, year]
+    amount: [budget amount, budget]
+  refs:
+    org_unit: [cost centre]
+    contract: [contract no]
+
+transaction:
+  file: [journal, ledger, gl]
+  fields:
+    occurred_on: [posting date, date]
+    amount: [amount]
+    account: [gl account, account]
+    currency: [currency]
+  refs:
+    org_unit: [cost centre, costcentre]
+    contract: [contract no, contract ref]
+
+activity:
+  file: [plan, project]
+  fields:
+    name: [activity name]
+    kind: [activity type]
+    planned_start: [planned start]
+    planned_end: [planned finish]
+  refs:
+    activity: [activity code]
+    org_unit: [site code]
+
+activity_requirement:
+  file: [booking, resource]
+  fields:
+    resource: [resource]
+    needed_from: [booked from]
+    needed_to: [booked to]
+  refs:
+    activity: [activity code]
+
+risk:
+  file: [audit, finding, risk]
+  fields:
+    title: [area]
+    raised_on: [raised]
+    severity: [severity]
+    status: [status]
+  refs:
+    risk: [finding id]
+    org_unit: [site code]
