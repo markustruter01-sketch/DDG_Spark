@@ -1,12 +1,51 @@
 # Which model serves each tier. Changing a model is an edit here, nothing else.
 # Prices are per million tokens. They are left at 0 on purpose: fill them in
 # from the provider's current price list so the budget and spend views are real.
+#
+# Providers: any service that speaks the Anthropic API or the OpenAI chat API.
+# A provider is connected when its key_env secret is set in Replit Secrets.
+# Models whose provider is not connected run on the mock model instead.
+#
+# Profiles map each tier to a model. The active profile is router.profile,
+# or the SPARK_MODEL_PROFILE setting when that is set.
 
 [router]
 minimum_harnesses = 3
 citation_failures = 2
 daily_escalation_budget_usd = 5.0
 fallback_model = "local"
+profile = "free"
+
+[providers.anthropic]
+kind = "anthropic"
+key_env = "ANTHROPIC_API_KEY"
+
+[providers.openai]
+kind = "openai-compatible"
+base_url = "https://api.openai.com/v1"
+key_env = "OPENAI_API_KEY"
+
+[providers.groq]
+kind = "openai-compatible"
+base_url = "https://api.groq.com/openai/v1"
+key_env = "GROQ_API_KEY"
+free_tier = true
+
+[providers.gemini]
+kind = "openai-compatible"
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+key_env = "GOOGLE_GEMINI_API_KEY"
+free_tier = true
+
+# One key, most major models (OpenAI, Anthropic, Google, Meta, Mistral,
+# DeepSeek, xAI, Qwen). Model IDs look like "vendor/model".
+[providers.openrouter]
+kind = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+key_env = "OPENROUTER_API_KEY"
+
+[providers.local]
+kind = "local"
 
 [models.reason_default]
 provider = "anthropic"
@@ -58,12 +97,46 @@ context_size = 32000
 supports_tools = false
 runs_locally = true
 
-[tiers.reason]
+# Free models already used by DDG Finance (model IDs read from its code,
+# kraken-bot/forex_council.py, 19 November 2026). Free tiers have small daily
+# limits and the provider may keep what is sent: synthetic data only.
+# context_size is set low on purpose until checked against the provider.
+[models.free_reason]
+provider = "gemini"
+model_id = "gemini-3-flash-preview"
+max_sensitivity = "internal"
+price_input_per_million = 0.0
+price_output_per_million = 0.0
+context_size = 32000
+supports_tools = true
+runs_locally = false
+
+[models.free_work]
+provider = "groq"
+model_id = "openai/gpt-oss-120b"
+max_sensitivity = "internal"
+price_input_per_million = 0.0
+price_output_per_million = 0.0
+context_size = 32000
+supports_tools = true
+runs_locally = false
+
+[profiles.free.reason]
+default = "free_reason"
+escalation = "free_work"
+
+[profiles.free.work]
+default = "free_work"
+
+[profiles.free.bulk]
+default = "free_work"
+
+[profiles.claude.reason]
 default = "reason_default"
 escalation = "reason_escalation"
 
-[tiers.work]
+[profiles.claude.work]
 default = "work_default"
 
-[tiers.bulk]
+[profiles.claude.bulk]
 default = "bulk_default"

@@ -26,10 +26,22 @@ class HealthResponse(BaseModel):
 
 class TierStatus(BaseModel):
     model: str
+    provider: str
+    live: bool
     escalation_model: str | None = None
 
 
+class ProviderStatus(BaseModel):
+    name: str
+    kind: str
+    key_name: str | None
+    connected: bool
+    free_tier: bool
+
+
 class ModelsResponse(BaseModel):
+    profile: str
+    providers: list[ProviderStatus]
     tiers: dict[str, TierStatus]
     daily_spend_usd: dict[str, str]
     daily_escalation_budget_usd: float

@@ -151,7 +151,13 @@ class OpenAICompatibleAdapter:
         from openai import OpenAI
 
         self.model = model
-        self.client: Any = OpenAI(api_key=api_key, base_url=base_url)
+        # Explicit client name: some provider firewalls reject default library
+        # agents (seen by DDG Finance with Groq).
+        self.client: Any = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+            default_headers={"User-Agent": "ddg-spark/1.0"},
+        )
 
     def describe(self) -> ModelDescription:
         return _description(self.model)
@@ -240,21 +246,28 @@ def anthropic_default_system() -> str:
     return "Answer the user's request using the provided context."
 
 
+def provider_key(config: GatewayConfig, provider_name: str) -> str | None:
+    """The provider's key from the environment, or None when not connected."""
+    provider = config.providers[provider_name]
+    if provider.key_env is None:
+        return None
+    return os.getenv(provider.key_env) or None
+
+
 def configured_adapters(
     config: GatewayConfig,
     *,
     reply_factory: Any = None,
     tool_call_factory: Any = None,
 ) -> dict[str, ModelAdapter]:
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-    openai_key = os.getenv("OPENAI_API_KEY")
-    openai_url = os.getenv("OPENAI_BASE_URL")
     adapters: dict[str, ModelAdapter] = {}
     for model in config.models.values():
-        if model.provider == "anthropic" and anthropic_key:
-            adapter: ModelAdapter = AnthropicAdapter(model, anthropic_key)
-        elif model.provider == "openai-compatible" and openai_key and openai_url:
-            adapter = OpenAICompatibleAdapter(model, openai_key, openai_url)
+        provider = config.providers[model.provider]
+        key = provider_key(config, model.provider)
+        if provider.kind == "anthropic" and key:
+            adapter: ModelAdapter = AnthropicAdapter(model, key)
+        elif provider.kind == "openai-compatible" and key and provider.base_url:
+            adapter = OpenAICompatibleAdapter(model, key, provider.base_url)
         else:
             from spark.gateway.mock import MockAdapter
 
