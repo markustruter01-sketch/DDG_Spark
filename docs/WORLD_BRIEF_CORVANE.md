@@ -1,6 +1,6 @@
 # World brief: Corvane Group
 
-Corvane Group is fictional. It exists to give Omni a realistic, messy,
+Corvane Group is fictional. It exists to give Spark a realistic, messy,
 twenty-year organisation to ingest. No real company, person or site is
 depicted. Country and city names are real places used only as locations.
 
@@ -86,5 +86,5 @@ regional business units; each business unit has sites.
 ## The second organisation: Blue Team
 
 Blue Team is a small fictional defence force, generated later from a second
-configuration, used to prove Omni onboards a different sector without code
+configuration, used to prove Spark onboards a different sector without code
 changes. It gets its own brief at Stage 2.

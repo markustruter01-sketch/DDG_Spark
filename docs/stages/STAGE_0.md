@@ -1,5 +1,10 @@
 # Stage 0: Foundations
 
+> **Done. Kept as a record.** This is the original
+> instruction, written before the build. Folder names, settings and the
+> two-connection design here were later changed: see `README.md`,
+> `docs/MASTER_PLAN.md` and `reports/STAGE_0_REPORT.md` for what was built.
+
 ## Goal
 
 A running, empty Omni: the database built from the schema, a signed-in web
