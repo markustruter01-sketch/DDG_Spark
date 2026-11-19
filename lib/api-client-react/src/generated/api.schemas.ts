@@ -51,6 +51,8 @@ export interface HealthResponse {
 
 export interface TierStatus {
   model: string;
+  provider: string;
+  live: boolean;
   escalation_model?: string | null;
 }
 
@@ -58,7 +60,17 @@ export type ModelsResponseTiers = {[key: string]: TierStatus};
 
 export type ModelsResponseDailySpendUsd = {[key: string]: string};
 
+export interface ProviderStatus {
+  name: string;
+  kind: string;
+  key_name: string | null;
+  connected: boolean;
+  free_tier: boolean;
+}
+
 export interface ModelsResponse {
+  profile: string;
+  providers: ProviderStatus[];
   tiers: ModelsResponseTiers;
   daily_spend_usd: ModelsResponseDailySpendUsd;
   daily_escalation_budget_usd: number;

@@ -226,14 +226,30 @@ class ModelGateway:
         report_day = today or date.today()
         tiers: dict[str, Any] = {}
         for tier_name, tier in self.config.tiers.items():
+            model = self.config.models[tier.default]
             tier_status: dict[str, Any] = {
-                "model": self.config.models[tier.default].model_id,
+                "model": model.model_id,
+                "provider": model.provider,
+                "live": self.is_live(model.model_id),
             }
             if tier.escalation:
                 tier_status["escalation_model"] = self.config.models[
                     tier.escalation
                 ].model_id
             tiers[tier_name] = tier_status
+        from spark.gateway.providers import provider_key
+
+        providers = [
+            {
+                "name": provider.name,
+                "kind": provider.kind,
+                "key_name": provider.key_env,
+                "connected": provider.kind == "local"
+                or provider_key(self.config, provider.name) is not None,
+                "free_tier": provider.free_tier,
+            }
+            for provider in self.config.providers.values()
+        ]
         spend = {
             model.model_id: str(
                 self.spend_ledger.total_for_model(model.model_id, report_day)
@@ -241,6 +257,8 @@ class ModelGateway:
             for model in self.config.models.values()
         }
         return {
+            "profile": self.config.profile,
+            "providers": providers,
             "tiers": tiers,
             "daily_spend_usd": spend,
             "daily_escalation_budget_usd": (
@@ -253,6 +271,9 @@ class ModelGateway:
             raise ValueError(f"Unknown gateway tier: {tier}")
         model = self.config.models[self.config.tiers[tier].default]
         return not isinstance(self.adapters[model.model_id], MockAdapter)
+
+    def is_live(self, model_id: str) -> bool:
+        return not isinstance(self.adapters.get(model_id), MockAdapter)
 
     def health(self) -> dict[str, Any]:
         adapter_names = sorted(

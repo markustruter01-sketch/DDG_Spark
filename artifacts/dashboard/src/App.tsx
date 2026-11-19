@@ -462,25 +462,24 @@ function SettingsPage() {
     <section className="content">
       <div className="eyebrow">{PRODUCT_NAME}</div>
       <h1 className="page-heading">Settings</h1>
-      <p className="page-description">Model tiers and the active pack.</p>
+      <p className="page-description">AI models, connections and the active pack.</p>
       <div className="page-grid settings-grid">
         <section className="glass-panel panel-pad" aria-labelledby="models-heading">
-          <h2 className="panel-heading" id="models-heading">API model tiers</h2>
-          <p className="panel-subtitle">Configuration returned by the API.</p>
+          <h2 className="panel-heading" id="models-heading">AI models</h2>
+          <p className="panel-subtitle" data-testid="text-model-profile">Profile · {models.data?.profile ?? 'No data'}</p>
           {modelEntries.length ? (
             <div className="model-list">
               {modelEntries.map(([tier, details]) => (
                 <div className="model-row" key={tier} data-testid={`row-model-tier-${tier}`}>
                   <div className="model-key">{tier}</div>
                   <div className="model-details">
-                    <span>Model · {details.model}</span>
+                    <span className="health-state">
+                      <span className={`status-dot ${details.live ? '' : 'status-dot-empty'}`} aria-hidden="true" />
+                      {details.live ? 'Live' : 'Mock'}
+                    </span>
+                    <span>{details.provider} · {details.model}</span>
                     <span className="mono">Daily spend · ${spend[details.model] ?? '—'}</span>
-                    {details.escalation_model && (
-                      <>
-                        <span>Escalation · {details.escalation_model}</span>
-                        <span className="mono">Daily spend · ${spend[details.escalation_model] ?? '—'}</span>
-                      </>
-                    )}
+                    {details.escalation_model && <span>Escalation · {details.escalation_model}</span>}
                   </div>
                 </div>
               ))}
@@ -490,6 +489,25 @@ function SettingsPage() {
               </div>
             </div>
           ) : <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>}
+        </section>
+        <section className="glass-panel panel-pad" aria-labelledby="providers-heading">
+          <h2 className="panel-heading" id="providers-heading">Connections</h2>
+          <p className="panel-subtitle">A provider connects when its key is added in Replit Secrets.</p>
+          <div className="model-list">
+            {(models.data?.providers ?? []).map((provider) => (
+              <div className="model-row" key={provider.name} data-testid={`row-provider-${provider.name}`}>
+                <div className="model-key">{provider.name}</div>
+                <div className="model-details">
+                  <span className="health-state">
+                    <span className={`status-dot ${provider.connected ? '' : 'status-dot-empty'}`} aria-hidden="true" />
+                    {provider.connected ? 'Connected' : 'Not connected'}
+                  </span>
+                  {provider.key_name && <span className="mono">{provider.key_name}</span>}
+                  {provider.free_tier && <span>Free tier</span>}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
         <section className="glass-panel panel-pad" aria-labelledby="pack-heading">
           <h2 className="panel-heading" id="pack-heading">Pack</h2>

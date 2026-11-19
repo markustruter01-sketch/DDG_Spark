@@ -121,5 +121,6 @@ Spark is a Digital Dynamics Group (DDG) product. Follow these rules for all dash
 - API routes and sessions: `backend/spark/api/`.
 - Dashboard: `artifacts/dashboard/`.
 - Model gateway: `backend/spark/gateway/`; only this package may name or call model providers.
+- AI providers and models: `backend/spark/gateway/config.toml`. A provider connects when its key is in Replit Secrets (names: `GROQ_API_KEY`, `GOOGLE_GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). The active profile is `free` (Groq and Gemini free tiers) during development; set `SPARK_MODEL_PROFILE=claude` to switch. Check connections by hand with `cd backend && uv run python -m spark.gateway.smoke` (real calls; tests never make them).
 - Sector packs: YAML files in `backend/spark/packs/`; the dashboard consumes labels from the API.
 - Do not keep a second API or database implementation. The Express server, Drizzle library and generated Zod package have been removed. The former API artifact's Replit metadata remains without a service so the existing registry entry is not edited outside Replit's artifact tooling.
