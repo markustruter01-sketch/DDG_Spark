@@ -7,9 +7,9 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 ## Stage and scope
 
 - Work on the current stage only. Do not start a later stage. If an instruction is unclear, stop and ask.
-- Current target: Stage 1 (Walking skeleton).
-- Stage 1 is one end-to-end synthetic-data question path with traceable sources, read-only agent tools, a gateway-routed harness, citations and a ledger.
-- Stage 1 excludes other harnesses, orchestration, entity resolution, AI-proposed mappings, scanned documents, charts, maps, voice, and changes to or visual polish of the 3D core.
+- Current target: Stage 2 (Synthetic organisations). Instructions: `docs/stages/STAGE_2.md`.
+- Stage 2 makes source files only: Corvane's 20-year archive and Blue Team, each with planted problems, an answer key and plain-code recovery checks. Command: `cd backend && uv run python -m spark.sim.build --org corvane --size small`.
+- Stage 2 excludes loading into the database, entity resolution, mappings, scanned PDFs, new harnesses, AI calls and dashboard changes.
 
 ## Rules for every stage
 
