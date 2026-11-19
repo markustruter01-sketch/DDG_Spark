@@ -6,11 +6,11 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from omni.api.auth import require_session
-from omni.api.routes import router
-from omni.gateway.config import load_config
-from omni.gateway.service import build_mock_gateway
-from omni.packs.loader import PACK_DIR, active_pack_name, load_pack, public_pack
+from spark.api.auth import require_session
+from spark.api.routes import router
+from spark.gateway.config import load_config
+from spark.gateway.service import build_mock_gateway
+from spark.packs.loader import PACK_DIR, active_pack_name, load_pack, public_pack
 
 
 def api_test_app(authenticated: bool) -> FastAPI:
@@ -20,7 +20,7 @@ def api_test_app(authenticated: bool) -> FastAPI:
     if authenticated:
         user: dict[str, Any] = {
             "user_id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa",
-            "email": "test@omni.local",
+            "email": "test@spark.local",
             "role": "administrator",
             "clearance": "restricted",
         }
@@ -74,7 +74,7 @@ def test_pack_route_uses_the_environment_selected_pack(
         path.stem for path in PACK_DIR.glob("*.yaml") if path.name != "pack-config.yaml"
     }
     alternate = next(name for name in available if name != active_pack_name())
-    monkeypatch.setenv("OMNI_PACK", alternate)
+    monkeypatch.setenv("SPARK_PACK", alternate)
     load_pack.cache_clear()
     with TestClient(api_test_app(authenticated=True)) as client:
         response = client.get("/api/pack")

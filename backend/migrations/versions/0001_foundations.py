@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from alembic import op
 
-from omni.model.schema import build_metadata
+from spark.model.schema import build_metadata
 
 revision = "0001_foundations"
 down_revision = None

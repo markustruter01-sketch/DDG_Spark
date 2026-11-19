@@ -1,6 +1,6 @@
-# Omni
+# Spark
 
-Omni is a web dashboard that ingests an organisation's historical data (databases, spreadsheets, documents and scans) into one connected data model, then puts specialist AI agents called harnesses on top to advise, predict and explain. Every statement links to its source records. AI works on a copy of the data and must be structurally unable to change source data.
+Spark is a web dashboard that ingests an organisation's historical data (databases, spreadsheets, documents and scans) into one connected data model, then puts specialist AI agents called harnesses on top to advise, predict and explain. Every statement links to its source records. AI works on a copy of the data and must be structurally unable to change source data.
 
 All data is synthetic. The initial fictional organisation is Corvane Group, with about 18,500 employees, 140 sites, 14 countries, a global head office in Perth, regional headquarters in Singapore, Houston and Rotterdam, and divisions Resources, Energy, Logistics, Infrastructure Services and Corporate. A fictional defence force, Blue Team, may be added later to prove portability through configuration only.
 
@@ -56,10 +56,11 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 - The database currently allows exactly one administrator. Revisit this when user management is built.
 - The agent identity can read every entity row regardless of the signed-in user's clearance. Enforce clearance when the agent tool layer matures; do not change this during Stage 1.
 - Derived platform and agent passwords must be reset by a migration if the owner database credential changes.
+- Spark was called Omni until 19 November 2026. Database-side names keep the old name on purpose: the logins `omni_platform` and `omni_agent`, the `omni_*` database functions, the `omni-database-role:` password string, the `omni-admin-bootstrap` lock and the `omni:` prefix for stable record IDs. Renaming them would change passwords, permissions or record IDs. Do not rename them. Everything else uses Spark.
 
 ## Brand: Night Glass
 
-Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashboard UI. The home page suggests a still night landscape seen through frosted glass: calm, clear and precise.
+Spark is a Digital Dynamics Group (DDG) product. Follow these rules for all dashboard UI. The home page suggests a still night landscape seen through frosted glass: calm, clear and precise.
 
 ### Colour and glass
 
@@ -89,7 +90,7 @@ Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashb
 
 - Buttons, cards, tables, tags, status dots, drawers and the page shell must follow Night Glass.
 - Keyboard focus is a 2 px Ice outline with a 2 px offset. Respect reduced-motion settings everywhere, including the 3D scene.
-- The lockup uses the supplied `ddg-mark-glitch.png` mark, “DDG” in Geist 600, a thin divider, then “Omni” in Geist 300 at 78% white. The owner chose this glitch mark as a deliberate exception for the logo image only. If the file is missing, show the text lockup. Never draw or invent a logo.
+- The lockup uses the supplied `ddg-mark-glitch.png` mark, “DDG” in Geist 600, a thin divider, then “Spark” in Geist 300 at 78% white. The owner chose this glitch mark as a deliberate exception for the logo image only. If the file is missing, show the text lockup. Never draw or invent a logo.
 - Do not use glows, text glow, RGB glitch effects, magenta offsets, gradient fills, coloured text or coloured panels. Never put more than one accent colour in a card, put a busy photo behind text without glass, or show a sharp full photo outside the home page. The owner-supplied glitch mark is the one deliberate exception: glitch is allowed in that logo image only, with no added effects.
 - Stage 0's 3D core is a plain placeholder: white and glass only; white or frosted nodes; white hairline links; white Geist labels; each node has a hollow dot and “No data”. No glow, bloom or coloured lighting. Do not polish it before the owner reviews concepts.
 
@@ -115,8 +116,8 @@ Omni is a Digital Dynamics Group (DDG) product. Follow these rules for all dashb
 - Back end: one Python 3.12 project in `backend/`, managed by uv, using FastAPI, Pydantic v2, SQLAlchemy 2, psycopg 3, Alembic, pgvector, GeoAlchemy2, argon2, pytest, ruff and pyright.
 - Dashboard: React and Vite in `artifacts/dashboard/`, written in TypeScript.
 - Universal data model: one YAML schema in `backend/`, from which runtime tables are built.
-- API routes and sessions: `backend/omni/api/`.
+- API routes and sessions: `backend/spark/api/`.
 - Dashboard: `artifacts/dashboard/`.
-- Model gateway: `backend/omni/gateway/`; only this package may name or call model providers.
-- Sector packs: YAML files in `backend/omni/packs/`; the dashboard consumes labels from the API.
+- Model gateway: `backend/spark/gateway/`; only this package may name or call model providers.
+- Sector packs: YAML files in `backend/spark/packs/`; the dashboard consumes labels from the API.
 - Do not keep a second API or database implementation. The Express server, Drizzle library and generated Zod package have been removed. The former API artifact's Replit metadata remains without a service so the existing registry entry is not edited outside Replit's artifact tooling.

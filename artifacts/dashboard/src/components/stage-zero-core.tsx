@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useLocation } from 'wouter';
+import { PRODUCT_NAME } from '@/lib/brand-assets';
 
 type Harness = { key: string; label: string };
 type NodePosition = { key: string; x: number; y: number };
@@ -132,7 +133,7 @@ export default function StageZeroCore({ harnesses }: { harnesses: Harness[] }) {
   }, [harnesses]);
 
   const goToHarness = (key: string) => setLocation(`/harness/${encodeURIComponent(key)}`);
-  const center = <div className="core-center" aria-label="Omni core, no data">
+  const center = <div className="core-center" aria-label={`${PRODUCT_NAME} core, no data`}>
     <span className="core-center-mark" aria-hidden="true" />
     <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
   </div>;

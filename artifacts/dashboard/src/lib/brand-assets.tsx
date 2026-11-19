@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
+// The product name. Change it here only.
+export const PRODUCT_NAME = 'Spark';
+
 export const brandAssetUrl = (filename: string) => {
   const base = import.meta.env.BASE_URL.endsWith('/')
     ? import.meta.env.BASE_URL
@@ -77,7 +80,7 @@ export function BrandLockup({
     <div
       className={`brand-lockup ${className} ${large ? 'brand-lockup-large' : ''}`}
       role="img"
-      aria-label="DDG Omni"
+      aria-label={`DDG ${PRODUCT_NAME}`}
       data-testid="brand-lockup"
     >
       {markUrl && !markFailed && (
@@ -92,14 +95,14 @@ export function BrandLockup({
       )}
       <span className="brand-ddg">DDG</span>
       <span className="brand-divider" aria-hidden="true" />
-      <span className="brand-name">Omni</span>
+      <span className="brand-name">{PRODUCT_NAME}</span>
     </div>
   );
 }
 
 type IntroPhase = 'checking' | 'playing' | 'fading' | 'done';
 
-const introPlayedKey = 'omni-intro-played';
+const introPlayedKey = 'spark-intro-played';
 
 function shouldShowIntro(): boolean {
   if (typeof window === 'undefined') return false;

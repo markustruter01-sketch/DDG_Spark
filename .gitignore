@@ -63,7 +63,7 @@ backend/**/__pycache__/
 backend/openapi.generated.json
 /generated-artifacts/
 
-# From the original Omni repository
+# From the original Spark repository
 __pycache__/
 *.pyc
 .env

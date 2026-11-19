@@ -8,12 +8,12 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from omni.gateway.config import CONFIG_FILE, GatewayConfig, load_config
-from omni.gateway.contracts import ModelDescription, ToolCall
-from omni.gateway.mock import MockAdapter
-from omni.gateway.router import RouteRequest, SensitivityRefused, route_request
-from omni.gateway.service import MemoryEgressRecorder, ModelGateway
-from omni.gateway.spend import MemorySpendLedger
+from spark.gateway.config import CONFIG_FILE, GatewayConfig, load_config
+from spark.gateway.contracts import ModelDescription, ToolCall
+from spark.gateway.mock import MockAdapter
+from spark.gateway.router import RouteRequest, SensitivityRefused, route_request
+from spark.gateway.service import MemoryEgressRecorder, ModelGateway
+from spark.gateway.spend import MemorySpendLedger
 
 TODAY = date(2026, 11, 12)
 

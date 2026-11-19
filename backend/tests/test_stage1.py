@@ -14,29 +14,29 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
-from omni.api.auth import COOKIE_NAME, _encode_session
-from omni.config import get_settings
-from omni.db.agent import agent_engine
-from omni.db.platform import platform_engine
-from omni.evals.run import ANSWER_KEY
-from omni.gateway.config import load_config
-from omni.gateway.contracts import ModelAdapter, ToolCall
-from omni.gateway.mock import MockAdapter
-from omni.gateway.service import (
+from spark.api.auth import COOKIE_NAME, _encode_session
+from spark.config import get_settings
+from spark.db.agent import agent_engine
+from spark.db.platform import platform_engine
+from spark.evals.run import ANSWER_KEY
+from spark.gateway.config import load_config
+from spark.gateway.contracts import ModelAdapter, ToolCall
+from spark.gateway.mock import MockAdapter
+from spark.gateway.service import (
     MemoryEgressRecorder,
     ModelGateway,
     model_description,
 )
-from omni.gateway.spend import MemorySpendLedger
-from omni.harness.citations import check_citations
-from omni.harness.loader import load_harness
-from omni.harness.runner import ask_harness
-from omni.ingest.loader import ingest_dataset
-from omni.ledger.postgres import PostgresAuditLedger
-from omni.packs.loader import active_pack
-from omni.sim.generate import CONFIG_FILE, generate_dataset
-from omni.tools import read_tools
-from omni.tools.read_tools import (
+from spark.gateway.spend import MemorySpendLedger
+from spark.harness.citations import check_citations
+from spark.harness.loader import load_harness
+from spark.harness.runner import ask_harness
+from spark.ingest.loader import ingest_dataset
+from spark.ledger.postgres import PostgresAuditLedger
+from spark.packs.loader import active_pack
+from spark.sim.generate import CONFIG_FILE, generate_dataset
+from spark.tools import read_tools
+from spark.tools.read_tools import (
     DocumentSearchInput,
     HorizonInput,
     ItemInput,
@@ -428,7 +428,7 @@ def test_sql_injection_string_is_only_a_parameterized_read(
         return json.dumps({"statements": []})
 
     monkeypatch.setattr(
-        "omni.harness.runner.append_ledger",
+        "spark.harness.runner.append_ledger",
         lambda **values: stored.append(values),
     )
     before = _table_counts()
@@ -508,7 +508,7 @@ def test_document_injection_is_fenced_and_write_tools_are_refused(
         )
 
     monkeypatch.setattr(
-        "omni.harness.runner.append_ledger",
+        "spark.harness.runner.append_ledger",
         lambda **values: stored.append(values),
     )
     before = _table_counts()
@@ -570,7 +570,7 @@ def test_invalid_citation_is_marked_unsupported() -> None:
 def test_signed_in_ask_returns_citation_evidence_and_complete_ledger(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import omni.main as main_module
+    import spark.main as main_module
 
     manifest = _manifest()
     gateway, _ = _mock_gateway(
