@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 
 from alembic import op
 
 from spark.db.credentials import derive_role_password
 from spark.model.schema import build_metadata, load_schema
+
+# Same frozen schema as 0001: the tables that existed when this was written.
+SCHEMA_SNAPSHOT = Path(__file__).resolve().parents[1] / "schema_0001.yaml"
 
 revision = "0002_service_identities"
 down_revision = "0001_foundations"
@@ -81,7 +85,7 @@ def upgrade() -> None:
     op.execute("GRANT EXECUTE ON FUNCTION omni_reject_mutation() TO omni_platform")
     op.execute("DROP ROLE IF EXISTS omni_reader")
 
-    application_tables = tuple(build_metadata().tables)
+    application_tables = tuple(build_metadata(SCHEMA_SNAPSHOT).tables)
     for table_name in application_tables:
         if not re.fullmatch(r"[a-z_][a-z0-9_]*", table_name):
             raise RuntimeError(f"Unexpected table identifier in schema: {table_name}")

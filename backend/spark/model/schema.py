@@ -60,8 +60,8 @@ def _sql_type(type_name: str) -> Any:
 
 
 @lru_cache(maxsize=1)
-def build_metadata() -> MetaData:
-    definition = load_schema()
+def build_metadata(path: Path = SCHEMA_FILE) -> MetaData:
+    definition = load_schema(path)
     metadata = MetaData(
         naming_convention={
             "ix": "ix_%(table_name)s_%(column_0_name)s",

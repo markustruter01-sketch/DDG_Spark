@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from alembic import op
 
 from spark.model.schema import build_metadata
+
+# The schema as it was when this migration was written. Building from the live
+# schema made a fresh database fail at 0003 (index already present).
+SCHEMA_SNAPSHOT = Path(__file__).resolve().parents[1] / "schema_0001.yaml"
 
 revision = "0001_foundations"
 down_revision = None
@@ -13,7 +19,7 @@ depends_on = None
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
     op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
-    metadata = build_metadata()
+    metadata = build_metadata(SCHEMA_SNAPSHOT)
     metadata.create_all(bind=op.get_bind())
 
     op.execute(
@@ -208,5 +214,5 @@ def downgrade() -> None:
         """
     )
     op.execute("DROP FUNCTION IF EXISTS omni_reject_mutation()")
-    build_metadata().drop_all(bind=op.get_bind())
+    build_metadata(SCHEMA_SNAPSHOT).drop_all(bind=op.get_bind())
     op.execute("DROP ROLE IF EXISTS omni_reader")
