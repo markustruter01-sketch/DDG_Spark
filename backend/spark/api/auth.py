@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 
-from spark.config import get_settings
+from spark.config import dev_skip_sign_in, get_settings
 from spark.db.platform import platform_session
 
 logger = logging.getLogger("spark.auth")
@@ -151,7 +151,7 @@ def _dev_administrator() -> dict[str, Any]:
 
 
 def require_session(request: Request) -> dict[str, Any]:
-    if get_settings().dev_skip_sign_in:
+    if dev_skip_sign_in():
         return _dev_administrator()
     token = request.cookies.get(COOKIE_NAME)
     if not token:
