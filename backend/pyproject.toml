@@ -1,7 +1,7 @@
 [project]
-name = "omni"
+name = "spark"
 version = "0.1.0"
-description = "Omni Python API and worker"
+description = "Spark Python API and worker"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -19,15 +19,15 @@ dependencies = [
 ]
 
 [project.scripts]
-omni-server = "omni.main:main"
-omni-worker = "omni.jobs.worker:main"
+spark-server = "spark.main:main"
+spark-worker = "spark.jobs.worker:main"
 
 [build-system]
 requires = ["uv_build>=0.13.4,<0.14.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "omni"
+module-name = "spark"
 module-root = ""
 
 [dependency-groups]
@@ -52,5 +52,5 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
-include = ["omni"]
+include = ["spark"]
 exclude = ["migrations"]

@@ -8,8 +8,8 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.testclient import TestClient
 from starlette.requests import Request
 
-from omni.api import auth
-from omni.config import Settings, get_settings
+from spark.api import auth
+from spark.config import Settings, get_settings
 
 
 class FakeResult:
@@ -64,7 +64,7 @@ def test_sign_in_uses_argon2_and_sets_signed_session_cookie(
     password = "test-only-password"
     user = {
         "user_id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa",
-        "email": "admin@omni.local",
+        "email": "admin@spark.local",
         "password_hash": auth.password_hasher.hash(password),
         "role": "administrator",
         "clearance": "restricted",
@@ -96,7 +96,7 @@ def test_sign_in_rejects_an_incorrect_password(
 ) -> None:
     user = {
         "user_id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa",
-        "email": "admin@omni.local",
+        "email": "admin@spark.local",
         "password_hash": auth.password_hasher.hash("correct-password"),
         "role": "administrator",
         "clearance": "restricted",
@@ -135,7 +135,7 @@ def test_admin_password_secret_updates_existing_hash_without_logging(
     settings = Settings(
         database_url="postgresql://owner:example@localhost/omni",
         session_secret="test-session-secret",
-        admin_email="admin@omni.local",
+        admin_email="admin@spark.local",
         admin_password=new_password,
     )
 
@@ -169,7 +169,7 @@ def test_admin_password_is_unchanged_when_secret_is_absent(
     settings = Settings(
         database_url="postgresql://owner:example@localhost/omni",
         session_secret="test-session-secret",
-        admin_email="admin@omni.local",
+        admin_email="admin@spark.local",
         admin_password=None,
     )
 
@@ -195,7 +195,7 @@ def test_sign_out_route_requires_a_session_and_clears_the_cookie() -> None:
         assert client.post("/api/auth/sign-out").status_code == 401
         app.dependency_overrides[auth.require_session] = lambda: {
             "user_id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa",
-            "email": "admin@omni.local",
+            "email": "admin@spark.local",
             "role": "administrator",
             "clearance": "restricted",
         }

@@ -1,9 +1,16 @@
-# Owner-supplied Omni brand assets
+# Brand assets
 
-Place the original owner-provided files here using these exact names:
+Supplied by the owner on 13 November 2026. Do not edit, recolour, crop, rotate,
+replace, redraw or add effects to these files. Use these exact names.
 
-- `ddg-loader.mp4` — silent five-second, 1920 × 1080 intro video
-- `ddg-mark-glitch.png` — DDG loop-mark image
-- `night-glass-landscape.jpg` — Night Glass landscape photo, optimized for a 1920 × 1080 dashboard
+| File | What it is | Where it is used |
+| --- | --- | --- |
+| `ddg-loader.mp4` | DDG intro, 5 seconds, 1920x1080, 30 fps, no sound | Plays first when the dashboard loads |
+| `ddg-mark-glitch.png` | The DDG loop mark, glitch version, 1254x1254 | The logo for Spark, by the owner's decision |
+| `night-glass-landscape.jpg` | Landscape photo by David Becker, from Unsplash under the Unsplash License | Home page background; blurred as "dusk" on other pages |
 
-Do not replace, redraw, recolour, crop, rotate, or add effects to the supplied assets. The app checks for the files at runtime and uses plain Night/Graphite grounds or the text lockup when they are absent.
+The Night Glass guidelines retire the glitch mark from products. The owner
+has chosen it for Spark anyway; that choice overrides the guideline here.
+
+The app checks for these files at runtime. If one is missing it falls back to
+plain Night/Graphite grounds or the text lockup, without an error.

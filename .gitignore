@@ -62,3 +62,13 @@ backend/.pyright/
 backend/**/__pycache__/
 backend/openapi.generated.json
 /generated-artifacts/
+
+# From the original Spark repository
+__pycache__/
+*.pyc
+.env
+.env.*
+node_modules/
+dist/
+.venv/
+raw_store/

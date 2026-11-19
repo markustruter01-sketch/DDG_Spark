@@ -1,0 +1,17 @@
+# Defence pack: labels for a land force.
+# Stub. Filled in at Stage 2 when Blue Team is generated. It exists now so that
+# nothing defence-specific is ever tempted into core code.
+name: defence
+harnesses:
+  supply_logistics: Sustainment
+  people: Readiness and People
+  operations: Operations and Plans
+  finance: Finance and Capability
+  assets: Fleet and Estate
+  risk_compliance: Assurance
+entities:
+  org_unit: Unit
+  person: Member
+  skill: Qualification
+  activity: Operation
+  event: Report

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-API_PORT="${OMNI_API_PORT:-8080}"
+API_PORT="${SPARK_API_PORT:-8080}"
 WEB_PORT="${PORT:-23183}"
 BASE_PATH="${BASE_PATH:-/}"
 
@@ -10,9 +10,9 @@ cd "$ROOT/backend"
 uv run alembic upgrade head
 cd "$ROOT"
 
-uv run --project "$ROOT/backend" python -m omni.jobs.worker &
+uv run --project "$ROOT/backend" python -m spark.jobs.worker &
 WORKER_PID=$!
-PORT="$API_PORT" uv run --project "$ROOT/backend" uvicorn omni.main:app \
+PORT="$API_PORT" uv run --project "$ROOT/backend" uvicorn spark.main:app \
   --host 0.0.0.0 --port "$API_PORT" &
 API_PID=$!
 PORT="$WEB_PORT" BASE_PATH="$BASE_PATH" \

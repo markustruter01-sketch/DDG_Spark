@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import pytest
 
-from omni.gateway.config import load_config
-from omni.gateway.contracts import ModelAdapter, ModelDescription, ToolCall
-from omni.gateway.mock import MockAdapter
-from omni.gateway.router import RouteRequest
-from omni.gateway.service import (
+from spark.gateway.config import load_config
+from spark.gateway.contracts import ModelAdapter, ModelDescription, ToolCall
+from spark.gateway.mock import MockAdapter
+from spark.gateway.router import RouteRequest
+from spark.gateway.service import (
     MemoryEgressRecorder,
     ModelGateway,
     build_configured_gateway,
     model_description,
 )
-from omni.gateway.spend import MemorySpendLedger
-from omni.ledger.postgres import PostgresAuditLedger
+from spark.gateway.spend import MemorySpendLedger
+from spark.ledger.postgres import PostgresAuditLedger
 
 
 def assert_adapter_conformance(adapter: ModelAdapter) -> None:

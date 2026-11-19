@@ -1,0 +1,23 @@
+# Enterprise pack: labels and thresholds for a large commercial organisation.
+# First used for Corvane Group. A pack may relabel and add; it may not change
+# or remove anything in backend/spark/model/schema.yaml.
+# Rules are plain numbers so an administrator can tune them.
+name: enterprise
+harnesses:
+  supply_logistics: Supply and Logistics
+  people: People
+  operations: Operations
+  finance: Finance
+  assets: Assets and Infrastructure
+  risk_compliance: Risk and Compliance
+entities:
+  org_unit: Business unit
+  person: Employee
+  skill: Certification
+  activity: Project
+  event: Incident
+rules:
+  stockout_warning_days: 60
+  certification_expiry_warning_days: 90
+  minimum_certified_share: 0.9
+  availability_floor: 0.85

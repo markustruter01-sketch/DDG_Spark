@@ -9,12 +9,12 @@ import pytest
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError
 
-from omni.api.auth import ensure_admin_account
-from omni.db.agent import agent_engine
-from omni.db.owner import owner_engine
-from omni.db.platform import platform_engine
-from omni.jobs.worker import work_once
-from omni.ledger.postgres import PostgresAuditLedger
+from spark.api.auth import ensure_admin_account
+from spark.db.agent import agent_engine
+from spark.db.owner import owner_engine
+from spark.db.platform import platform_engine
+from spark.jobs.worker import work_once
+from spark.ledger.postgres import PostgresAuditLedger
 
 
 def _expect_permission_error(
