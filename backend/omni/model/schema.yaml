@@ -1,18 +1,28 @@
+# Spark universal data model.
+#
+# This file is the single definition of every table. Database tables are built
+# from it at runtime. Do not hand-write a second definition anywhere.
+#
+# Sector packs (backend/omni/packs/) may relabel entities. They may not change
+# or remove anything defined here.
+
 version: 1
 common_entity_fields:
   id: {type: uuid, primary_key: true}
-  source_id: {type: uuid, nullable: false, references: raw_record.id}
+  source_id: {type: uuid, nullable: false, references: raw_record.id}  # the raw landed record this came from
   sensitivity: {type: sensitivity, nullable: false}
-  valid_from: {type: date, nullable: false}
-  valid_to: {type: date, nullable: true}
-  confidence: {type: confidence, nullable: false}
+  valid_from: {type: date, nullable: false}  # when this became true
+  valid_to: {type: date, nullable: true}  # when it stopped being true; empty means still true
+  confidence: {type: confidence, nullable: false}  # 0 to 1, set by ingestion
 entities:
+  # Any part of the organisation, at any level.
   org_unit:
     fields:
       name: {type: text, nullable: false}
-      kind: {type: text, nullable: false}
+      kind: {type: text, nullable: false}  # division, region, business unit, site team
       parent_org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
       location_id: {type: uuid, nullable: true, references: location.id}
+  # Someone who works for the organisation.
   person:
     fields:
       display_name: {type: text, nullable: false}
@@ -21,27 +31,32 @@ entities:
       employment_type: {type: text, nullable: false}
       start_date: {type: date, nullable: false}
       end_date: {type: date, nullable: true}
+  # A job or position, with the skills it requires.
   role:
     fields:
       title: {type: text, nullable: false}
       org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
       required_skills: {type: json, nullable: false}
+  # A qualification, certification, licence or competency.
   skill:
     fields:
       name: {type: text, nullable: false}
-      validity_months: {type: integer, nullable: true}
+      validity_months: {type: integer, nullable: true}  # empty means it does not expire
+  # A skill held by a person, with its expiry.
   person_skill:
     fields:
       person_id: {type: uuid, nullable: false, references: person.id}
       skill_id: {type: uuid, nullable: false, references: skill.id}
       awarded_on: {type: date, nullable: false}
       expires_on: {type: date, nullable: true}
+  # A place: a site, a building, a point or a line on the map.
   location:
     fields:
       name: {type: text, nullable: false}
       kind: {type: text, nullable: false}
       country: {type: text, nullable: false}
       geometry: {type: geometry, nullable: true}
+  # Equipment, a vehicle, a building or a piece of infrastructure.
   asset:
     fields:
       name: {type: text, nullable: false}
@@ -50,6 +65,7 @@ entities:
       location_id: {type: uuid, nullable: true, references: location.id}
       commissioned_on: {type: date, nullable: true}
       status: {type: text, nullable: false}
+  # Planned or unplanned work on an asset.
   maintenance_job:
     fields:
       asset_id: {type: uuid, nullable: false, references: asset.id}
@@ -57,17 +73,20 @@ entities:
       opened_on: {type: date, nullable: false}
       closed_on: {type: date, nullable: true}
       fault: {type: text, nullable: true}
+  # A stocked thing: a part, a consumable, fuel.
   item:
     fields:
       name: {type: text, nullable: false}
       category: {type: text, nullable: false}
       unit: {type: text, nullable: false}
+  # How much of an item a location held on a date.
   stock_level:
     fields:
       item_id: {type: uuid, nullable: false, references: item.id}
       location_id: {type: uuid, nullable: false, references: location.id}
       quantity: {type: numeric, nullable: false}
       as_of: {type: date, nullable: false}
+  # Receipt, issue or transfer of an item.
   stock_movement:
     fields:
       item_id: {type: uuid, nullable: false, references: item.id}
@@ -76,10 +95,12 @@ entities:
       quantity: {type: numeric, nullable: false}
       moved_on: {type: date, nullable: false}
       maintenance_job_id: {type: uuid, nullable: true, references: maintenance_job.id}
+  # An outside organisation that provides goods or services.
   supplier:
     fields:
       name: {type: text, nullable: false}
       country: {type: text, nullable: false}
+  # An order placed with a supplier.
   purchase_order:
     fields:
       supplier_id: {type: uuid, nullable: false, references: supplier.id}
@@ -89,6 +110,7 @@ entities:
       promised_on: {type: date, nullable: true}
       received_on: {type: date, nullable: true}
       amount: {type: numeric, nullable: true}
+  # An agreement with a supplier, customer or other party.
   contract:
     fields:
       title: {type: text, nullable: false}
@@ -97,12 +119,14 @@ entities:
       starts_on: {type: date, nullable: false}
       ends_on: {type: date, nullable: true}
       value: {type: numeric, nullable: true}
+  # Money allocated to a unit for a purpose and period.
   budget_line:
     fields:
       org_unit_id: {type: uuid, nullable: false, references: org_unit.id}
       category: {type: text, nullable: false}
       period: {type: text, nullable: false}
       amount: {type: numeric, nullable: false}
+  # Money spent or received.
   transaction:
     fields:
       budget_line_id: {type: uuid, nullable: true, references: budget_line.id}
@@ -111,6 +135,7 @@ entities:
       occurred_on: {type: date, nullable: false}
       amount: {type: numeric, nullable: false}
       description: {type: text, nullable: true}
+  # A unit of work: a project, task, shift, shipment or operation.
   activity:
     fields:
       name: {type: text, nullable: false}
@@ -123,6 +148,7 @@ entities:
       actual_start: {type: timestamp, nullable: true}
       actual_end: {type: timestamp, nullable: true}
       status: {type: text, nullable: false}
+  # A person, role, asset or item that an activity needs.
   activity_requirement:
     fields:
       activity_id: {type: uuid, nullable: false, references: activity.id}
@@ -132,6 +158,7 @@ entities:
       quantity: {type: numeric, nullable: true}
       needed_from: {type: timestamp, nullable: true}
       needed_to: {type: timestamp, nullable: true}
+  # Something that happened: an incident, a decision, a milestone.
   event:
     fields:
       kind: {type: text, nullable: false}
@@ -140,6 +167,7 @@ entities:
       location_id: {type: uuid, nullable: true, references: location.id}
       asset_id: {type: uuid, nullable: true, references: asset.id}
       summary: {type: text, nullable: false}
+  # A file or message, with its extracted text.
   document:
     fields:
       title: {type: text, nullable: false}
@@ -147,6 +175,7 @@ entities:
       authored_on: {type: date, nullable: true}
       org_unit_id: {type: uuid, nullable: true, references: org_unit.id}
       full_text: {type: text, nullable: false}
+  # An identified risk, obligation or audit finding.
   risk:
     fields:
       title: {type: text, nullable: false}
