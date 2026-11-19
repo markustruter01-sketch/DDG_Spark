@@ -10,7 +10,7 @@ cd "$ROOT/backend"
 uv run alembic upgrade head
 cd "$ROOT"
 
-uv run --project "$ROOT/backend" python -m omni.jobs.worker &
+uv run --project "$ROOT/backend" python -m spark.jobs.worker &
 WORKER_PID=$!
 cleanup() {
   kill "$WORKER_PID" 2>/dev/null || true
@@ -18,5 +18,5 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-uv run --project "$ROOT/backend" uvicorn omni.main:app \
+uv run --project "$ROOT/backend" uvicorn spark.main:app \
   --host 0.0.0.0 --port "$PORT"

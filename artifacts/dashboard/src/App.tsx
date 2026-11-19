@@ -7,6 +7,7 @@ import SignInPage from '@/components/sign-in-page';
 import {
   BrandLockup,
   IntroLoader,
+  PRODUCT_NAME,
   useBrandAssets,
 } from '@/lib/brand-assets';
 import {
@@ -127,12 +128,12 @@ function WorkspaceShell({
       className={`workspace ${activePath === '/' ? 'workspace-home' : 'page-graphite'} ${landscapeAvailable ? 'has-landscape' : ''}`}
     >
       <aside className="side-rail">
-        <Link className="rail-brand" href="/" aria-label="Omni home" data-testid="link-home-brand">
+        <Link className="rail-brand" href="/" aria-label={`${PRODUCT_NAME} home`} data-testid="link-home-brand">
           <BrandLockup markUrl={markUrl} />
         </Link>
         <div className="workspace-switcher" aria-label="Current workspace">
           <span className="workspace-avatar">DDG</span>
-          <span className="workspace-meta"><strong>Omni</strong><span>Stage 1</span></span>
+          <span className="workspace-meta"><strong>{PRODUCT_NAME}</strong><span>Stage 1</span></span>
           <ChevronDown size={14} aria-hidden="true" />
         </div>
         <div className="section-label">Workspace</div>
@@ -167,7 +168,7 @@ function WorkspaceShell({
       </aside>
       <main className="main-area">
         <header className="topbar">
-          <div className="crumbs"><span>Omni</span><ArrowRight size={12} aria-hidden="true" /><strong>{activePath === '/' ? 'Overview' : activePath === '/settings' ? 'Settings' : 'Workspace'}</strong></div>
+          <div className="crumbs"><span>{PRODUCT_NAME}</span><ArrowRight size={12} aria-hidden="true" /><strong>{activePath === '/' ? 'Overview' : activePath === '/settings' ? 'Settings' : 'Workspace'}</strong></div>
           <div className="top-actions"><span className="top-account" title={email}>{email}</span></div>
         </header>
         {children}
@@ -192,7 +193,7 @@ function HomePage() {
     <section className="content">
       <div className="home-heading">
         <div className="home-heading-copy">
-          <div className="eyebrow">Omni / Stage 1</div>
+          <div className="eyebrow">{PRODUCT_NAME} / Stage 1</div>
           <h1 className="page-heading">Core</h1>
           <p className="page-description">An advise-only workspace. Specialist workspaces will explain findings with source records.</p>
         </div>
@@ -277,7 +278,7 @@ function HarnessPage() {
   }
   return (
     <section className="content">
-      <div className="eyebrow">Omni / Workspace</div>
+      <div className="eyebrow">{PRODUCT_NAME} / Workspace</div>
       <h1 className="page-heading" data-testid="text-harness-label">{harness?.label ?? 'Workspace'}</h1>
       {harness?.available ? (
         <div className="harness-layout">
@@ -407,7 +408,7 @@ function SettingsPage() {
   if (models.isError || pack.isError) {
     return (
       <section className="content">
-        <div className="eyebrow">Omni</div><h1 className="page-heading">Settings</h1>
+        <div className="eyebrow">{PRODUCT_NAME}</div><h1 className="page-heading">Settings</h1>
         <ErrorState message="Model or pack information could not be reached." onRetry={() => { void models.refetch(); void pack.refetch(); }} />
       </section>
     );
@@ -418,7 +419,7 @@ function SettingsPage() {
 
   return (
     <section className="content">
-      <div className="eyebrow">Omni</div>
+      <div className="eyebrow">{PRODUCT_NAME}</div>
       <h1 className="page-heading">Settings</h1>
       <p className="page-description">Model tiers and the active pack.</p>
       <div className="page-grid settings-grid">

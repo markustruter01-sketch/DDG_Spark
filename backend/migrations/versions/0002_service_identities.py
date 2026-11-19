@@ -5,8 +5,8 @@ import re
 
 from alembic import op
 
-from omni.db.credentials import derive_role_password
-from omni.model.schema import build_metadata, load_schema
+from spark.db.credentials import derive_role_password
+from spark.model.schema import build_metadata, load_schema
 
 revision = "0002_service_identities"
 down_revision = "0001_foundations"

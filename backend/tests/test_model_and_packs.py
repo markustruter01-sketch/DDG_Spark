@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import yaml
 
-from omni.model.schema import build_metadata, load_schema, schema_counts
-from omni.packs.loader import PACK_DIR, active_pack, active_pack_name, load_pack
+from spark.model.schema import build_metadata, load_schema, schema_counts
+from spark.packs.loader import PACK_DIR, active_pack, active_pack_name, load_pack
 
 
 def test_yaml_is_the_single_source_for_entities_and_tables() -> None:
@@ -27,7 +27,7 @@ def test_location_uses_postgis_geometry() -> None:
 def test_default_pack_has_six_harnesses_and_entity_labels(
     monkeypatch,
 ) -> None:
-    monkeypatch.delenv("OMNI_PACK", raising=False)
+    monkeypatch.delenv("SPARK_PACK", raising=False)
     load_pack.cache_clear()
     pack = active_pack()
     default_name = yaml.safe_load(
@@ -44,7 +44,7 @@ def test_pack_can_be_selected_by_environment(monkeypatch) -> None:
         path.stem for path in PACK_DIR.glob("*.yaml") if path.name != "pack-config.yaml"
     }
     alternate = next(name for name in available if name != active_pack_name())
-    monkeypatch.setenv("OMNI_PACK", alternate)
+    monkeypatch.setenv("SPARK_PACK", alternate)
     load_pack.cache_clear()
     assert active_pack()["name"] == alternate
     load_pack.cache_clear()

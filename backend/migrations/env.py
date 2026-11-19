@@ -6,7 +6,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from omni.model.schema import build_metadata
+from spark.model.schema import build_metadata
 
 config = context.config
 if config.config_file_name:
