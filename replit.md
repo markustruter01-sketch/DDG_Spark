@@ -50,6 +50,7 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 - The back end is Python and the dashboard is TypeScript. This is not to be revisited.
 - The dashboard's visual design, especially the central AI visual, is designed together with the owner through concepts. Stage 0's 3D core is a placeholder; do not polish visuals without the owner's direction.
 - The owner's starting idea for the AI visual is a circular frame filled with liquid that splashes when the AI thinks and talks.
+- Layout (owner decision, 19 November 2026): no side menu. Pages use a dashboard layout under a slim top bar, and navigation is a row of independent floating glass buttons at the bottom of the screen (the dock), one per workspace plus Overview and Settings.
 
 ## Carried forward
 

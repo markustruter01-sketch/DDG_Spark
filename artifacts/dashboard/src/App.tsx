@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, type CSSProperties, type FormEvent, type Reac
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import SignInPage from '@/components/sign-in-page';
 import {
   BrandLockup,
@@ -20,7 +20,7 @@ import {
   usePackApiPackGet,
   useSessionInfoApiAuthSessionGet,
 } from '@workspace/api-client-react';
-import { ArrowRight, ChevronDown, Grid2X2, LogOut, Settings2 } from 'lucide-react';
+import { Grid2X2, LogOut, Settings2 } from 'lucide-react';
 import {
   Link,
   Redirect,
@@ -88,23 +88,69 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
+type DockItem = { href: string; label: string; short: string; icon?: ReactNode };
+
+function initials(label: string): string {
+  const words = label.split(/\s+/).filter((word) => /^[A-Za-z]/.test(word) && word.toLowerCase() !== 'and');
+  return words.slice(0, 2).map((word) => word[0].toUpperCase()).join('') || '—';
+}
+
+function DockNav({ location }: { location: string }) {
+  const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
+  const items: DockItem[] = [
+    { href: '/', label: 'Overview', short: 'Overview', icon: <Grid2X2 size={17} aria-hidden="true" /> },
+    ...(pack.data?.harnesses ?? []).map((harness) => ({
+      href: `/harness/${encodeURIComponent(harness.key)}`,
+      label: harness.label,
+      short: initials(harness.label),
+    })),
+    { href: '/settings', label: 'Settings', short: 'Settings', icon: <Settings2 size={17} aria-hidden="true" /> },
+  ];
+
+  return (
+    <nav className="dock" aria-label="Main navigation" data-testid="nav-dock">
+      {items.map((item) => {
+        const active = item.href === '/' ? location === '/' : location === item.href;
+        return (
+          <Tooltip key={item.href}>
+            <TooltipTrigger asChild>
+              <Link
+                className={`dock-button ${active ? 'active' : ''}`}
+                href={item.href}
+                aria-label={item.label}
+                aria-current={active ? 'page' : undefined}
+                data-testid={`dock-${item.href === '/' ? 'overview' : item.href.replace(/^\//, '').replace('/', '-')}`}
+              >
+                {item.icon ?? (!active && <span className="dock-initials">{item.short}</span>)}
+                {active && <span className="dock-label">{item.label}</span>}
+              </Link>
+            </TooltipTrigger>
+            {!active && <TooltipContent side="top">{item.label}</TooltipContent>}
+          </Tooltip>
+        );
+      })}
+    </nav>
+  );
+}
+
 function WorkspaceShell({
   children,
   markUrl,
   landscapeAvailable,
-  activePath,
+  location,
   email,
 }: {
   children: ReactNode;
   markUrl: string | null;
   landscapeAvailable: boolean;
-  activePath: string;
+  location: string;
   email: string;
 }) {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
+  const isHome = location === '/';
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -124,34 +170,14 @@ function WorkspaceShell({
   }
 
   return (
-    <div
-      className={`workspace ${activePath === '/' ? 'workspace-home' : 'page-graphite'} ${landscapeAvailable ? 'has-landscape' : ''}`}
-    >
-      <aside className="side-rail">
-        <Link className="rail-brand" href="/" aria-label={`${PRODUCT_NAME} home`} data-testid="link-home-brand">
+    <div className={`workspace ${isHome ? 'workspace-home' : 'page-graphite'} ${landscapeAvailable ? 'has-landscape' : ''}`}>
+      <header className="topbar">
+        <Link className="top-brand" href="/" aria-label={`${PRODUCT_NAME} home`} data-testid="link-home-brand">
           <BrandLockup markUrl={markUrl} />
         </Link>
-        <div className="workspace-switcher" aria-label="Current workspace">
-          <span className="workspace-avatar">DDG</span>
-          <span className="workspace-meta"><strong>{PRODUCT_NAME}</strong><span>Stage 1</span></span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </div>
-        <div className="section-label">Workspace</div>
-        <nav className="rail-nav" aria-label="Main navigation">
-          <Link className={`nav-item ${activePath === '/' ? 'active' : ''}`} href="/" data-testid="link-overview">
-            <Grid2X2 size={15} aria-hidden="true" /><span>Overview</span>
-          </Link>
-          <Link className={`nav-item ${activePath === '/settings' ? 'active' : ''}`} href="/settings" data-testid="link-settings">
-            <Settings2 size={15} aria-hidden="true" /><span>Settings</span>
-          </Link>
-        </nav>
-        <div className="side-spacer" />
-        <div className="rail-divider" />
-        <div className="profile-row">
-          <span className="user-avatar" aria-hidden="true">{email.slice(0, 1).toUpperCase()}</span>
-          <span className="profile-copy" data-testid="text-signed-in-account">
-            {email}<small>Signed in</small>
-          </span>
+        <div className="top-actions">
+          {signOutError && <span className="sign-out-error" role="status">Could not sign out. Try again.</span>}
+          <span className="top-account" title={email} data-testid="text-signed-in-account">{email}</span>
           <button
             className="icon-button"
             type="button"
@@ -164,22 +190,26 @@ function WorkspaceShell({
             <LogOut size={15} aria-hidden="true" />
           </button>
         </div>
-        {signOutError && <div className="sign-out-error" role="status">Could not sign out. Try again.</div>}
-      </aside>
-      <main className="main-area">
-        <header className="topbar">
-          <div className="crumbs"><span>{PRODUCT_NAME}</span><ArrowRight size={12} aria-hidden="true" /><strong>{activePath === '/' ? 'Overview' : activePath === '/settings' ? 'Settings' : 'Workspace'}</strong></div>
-          <div className="top-actions"><span className="top-account" title={email}>{email}</span></div>
-        </header>
-        {children}
-      </main>
+      </header>
+      <main className="main-area">{children}</main>
+      <DockNav location={location} />
     </div>
   );
 }
 
+function HealthState() {
+  const health = useHealthApiHealthGet({ query: { queryKey: getHealthApiHealthGetQueryKey() } });
+  if (health.isLoading || !health.data) {
+    return <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>;
+  }
+  if (health.data.status === 'ok') {
+    return <span className="health-state"><span className="status-dot" aria-hidden="true" />On time</span>;
+  }
+  return <span className="health-state"><span className="status-dot status-dot-problem" aria-hidden="true" />Problem</span>;
+}
+
 function HomePage() {
   const pack = usePackApiPackGet({ query: { queryKey: getPackApiPackGetQueryKey() } });
-  const health = useHealthApiHealthGet({ query: { queryKey: getHealthApiHealthGetQueryKey() } });
   const harnesses = pack.data?.harnesses ?? [];
 
   if (pack.isLoading) {
@@ -190,29 +220,40 @@ function HomePage() {
   }
 
   return (
-    <section className="content">
+    <section className="content dashboard">
       <div className="home-heading">
         <div className="home-heading-copy">
           <div className="eyebrow">{PRODUCT_NAME} / Stage 1</div>
-          <h1 className="page-heading">Core</h1>
-          <p className="page-description">An advise-only workspace. Specialist workspaces will explain findings with source records.</p>
+          <h1 className="page-heading">Overview</h1>
+          <p className="page-description">An advise-only workspace. Specialist workspaces explain findings with source records.</p>
         </div>
-        <div className="home-note" data-testid="status-health">
-          {health.isLoading ? (
-            <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
-          ) : health.data?.status === 'ok' ? (
-            <span className="health-state"><span className="status-dot" aria-hidden="true" />On time</span>
-          ) : health.data ? (
-            <span className="health-state"><span className="status-dot status-dot-problem" aria-hidden="true" />Problem</span>
-          ) : (
-            <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
-          )}
-        </div>
+        <div className="home-note" data-testid="status-health"><span className="eyebrow">System</span><HealthState /></div>
       </div>
-      <div className="core-frame" data-testid="panel-core-placeholder">
-        <Suspense fallback={<div className="core-loading" role="status">Loading core.</div>}>
-          <StageZeroCore harnesses={harnesses} />
-        </Suspense>
+      <div className="dashboard-grid">
+        <div className="core-frame" data-testid="panel-core-placeholder">
+          <Suspense fallback={<div className="core-loading" role="status">Loading core.</div>}>
+            <StageZeroCore harnesses={harnesses} />
+          </Suspense>
+        </div>
+        <section className="home-panel" aria-labelledby="workspaces-heading">
+          <h2 className="panel-heading" id="workspaces-heading">Workspaces</h2>
+          <p className="panel-subtitle">Findings appear here once data is loaded.</p>
+          {harnesses.length ? (
+            <div className="workspace-list">
+              {harnesses.map((harness) => (
+                <Link
+                  key={harness.key}
+                  className="workspace-row"
+                  href={`/harness/${encodeURIComponent(harness.key)}`}
+                  data-testid={`row-workspace-${harness.key}`}
+                >
+                  <span className="workspace-row-label">{harness.label}</span>
+                  <span className="health-state"><span className="status-dot status-dot-empty" aria-hidden="true" />No data</span>
+                </Link>
+              ))}
+            </div>
+          ) : <div className="empty-inline"><span className="status-dot status-dot-empty" aria-hidden="true" /><span>No data</span></div>}
+        </section>
       </div>
     </section>
   );
@@ -492,12 +533,11 @@ function ProtectedRoutes({
   if (session.isLoading) return <LoadingScreen />;
   if (session.isError || !session.data) return <Redirect to="/sign-in" />;
 
-  const activePath = location.startsWith('/harness/') ? '/harness' : location;
   return (
     <WorkspaceShell
       markUrl={markUrl}
       landscapeAvailable={landscapeAvailable}
-      activePath={activePath}
+      location={location}
       email={session.data.email}
     >
       <Switch>
@@ -509,7 +549,7 @@ function ProtectedRoutes({
             <section className="not-found-card">
               <h1>Page not found</h1>
               <p>This route is not available.</p>
-              <Link className="nav-item" href="/" data-testid="link-return-home">Return to overview</Link>
+              <Link className="button-secondary" href="/" data-testid="link-return-home">Return to overview</Link>
             </section>
           </main>
         )} />
