@@ -12,7 +12,9 @@ cd "$ROOT"
 
 uv run --project "$ROOT/backend" python -m spark.jobs.worker &
 WORKER_PID=$!
-PORT="$API_PORT" uv run --project "$ROOT/backend" uvicorn spark.main:app \
+# Development only: no sign-in. Delete SPARK_DEV_SKIP_SIGN_IN=1 below to turn
+# sign-in back on. scripts/serve-project.sh (published app) never sets it.
+SPARK_DEV_SKIP_SIGN_IN=1 PORT="$API_PORT" uv run --project "$ROOT/backend" uvicorn spark.main:app \
   --host 0.0.0.0 --port "$API_PORT" &
 API_PID=$!
 PORT="$WEB_PORT" BASE_PATH="$BASE_PATH" \

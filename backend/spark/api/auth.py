@@ -130,7 +130,29 @@ def ensure_admin_account() -> None:
         logger.info("Created the configured administrator account.")
 
 
+def _dev_administrator() -> dict[str, Any]:
+    with platform_session() as session:
+        user = (
+            session.execute(
+                text(
+                    """
+                SELECT id::text AS user_id, email, role, clearance
+                FROM auth_user WHERE role = 'administrator'
+                ORDER BY created_at LIMIT 1
+                """
+                )
+            )
+            .mappings()
+            .first()
+        )
+    if user is None:
+        raise HTTPException(status_code=401, detail="No administrator exists yet.")
+    return dict(user)
+
+
 def require_session(request: Request) -> dict[str, Any]:
+    if get_settings().dev_skip_sign_in:
+        return _dev_administrator()
     token = request.cookies.get(COOKIE_NAME)
     if not token:
         raise HTTPException(status_code=401, detail="Sign-in required.")

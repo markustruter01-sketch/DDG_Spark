@@ -218,3 +218,56 @@ def test_sign_out_helper_deletes_the_session_cookie() -> None:
     assert auth.COOKIE_NAME in cookie
     assert "max-age=0" in cookie
     assert "httponly" in cookie
+
+
+def _settings(dev_skip_sign_in: bool) -> Settings:
+    return Settings(
+        database_url="postgresql://owner:example@localhost/omni",
+        session_secret="test-session-secret",
+        admin_email="admin@spark.local",
+        admin_password=None,
+        dev_skip_sign_in=dev_skip_sign_in,
+    )
+
+
+def test_dev_skip_sign_in_returns_the_administrator_without_a_cookie(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    admin = {
+        "user_id": "7410cfa0-ef17-4b3f-9c5d-cced479c30aa",
+        "email": "admin@spark.local",
+        "role": "administrator",
+        "clearance": "restricted",
+    }
+
+    @contextmanager
+    def fake_platform_session():
+        yield FakeSession(admin)
+
+    monkeypatch.setattr(auth, "get_settings", lambda: _settings(True))
+    monkeypatch.setattr(auth, "platform_session", fake_platform_session)
+    assert auth.require_session(make_request()) == admin
+
+
+def test_sign_in_is_required_when_dev_skip_is_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(auth, "get_settings", lambda: _settings(False))
+    with pytest.raises(HTTPException) as error:
+        auth.require_session(make_request())
+    assert error.value.status_code == 401
+
+
+def test_dev_skip_sign_in_is_off_unless_the_setting_is_exactly_1(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://owner:example@localhost/omni")
+    monkeypatch.setenv("SESSION_SECRET", "test-session-secret")
+    for value in (None, "", "0", "true"):
+        if value is None:
+            monkeypatch.delenv("SPARK_DEV_SKIP_SIGN_IN", raising=False)
+        else:
+            monkeypatch.setenv("SPARK_DEV_SKIP_SIGN_IN", value)
+        assert get_settings().dev_skip_sign_in is False
+    monkeypatch.setenv("SPARK_DEV_SKIP_SIGN_IN", "1")
+    assert get_settings().dev_skip_sign_in is True
