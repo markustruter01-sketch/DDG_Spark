@@ -6,7 +6,9 @@ test passes. If a task seems to require breaking one, stop and ask.
 ## Three database identities
 
 Each is a real database login with its own credentials. No code signs in as
-one and switches to another.
+one and switches to another. Owner is the `DATABASE_URL` login; platform and
+agent are `omni_platform` and `omni_agent` (old product name, kept on
+purpose).
 
 1. **Owner.** Migrations and ingestion only. Nothing else may import it.
 2. **Platform.** The platform's own services: sign-in and sessions, the job
@@ -37,7 +39,7 @@ New tables are private to the agent identity until explicitly granted.
 
 ## One door to the model
 
-7. Only `core/gateway/` may import a model vendor's SDK or name a model.
+7. Only `backend/spark/gateway/` may import a model vendor's SDK or name a model.
    Everything else asks the gateway for a tier: reason, work or bulk.
 8. Every model call goes through `Gateway.run`, so it is routed, costed and
    written to the egress log.
@@ -61,10 +63,12 @@ New tables are private to the agent identity until explicitly granted.
 
 ## Portability rules
 
-16. No sector-specific word, entity or rule in `core/`, `ingest/`, `api/` or
-    `web/`. Sector content lives in `packs/`.
-17. The data model is defined once, in `model/core.schema.yaml`. Types are
-    generated from it, not written by hand.
+16. No sector-specific word, entity or rule in platform code (`backend/spark/`
+    or `artifacts/dashboard/`). Sector content lives in `backend/spark/packs/`.
+    The synthetic data generator (`backend/spark/sim/`) and harness
+    instruction files are the only other places it may appear.
+17. The data model is defined once, in `backend/spark/model/schema.yaml`.
+    Database tables are built from it; nothing else defines a table.
 
 ## Proof
 

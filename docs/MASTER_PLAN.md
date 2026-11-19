@@ -1,10 +1,12 @@
-# Omni master plan (v2.1, repository copy)
+# Spark master plan (v2.1, repository copy)
 
 This is the working copy for anyone building in this repository. The full
 audited plan, with diagrams and reasoning, is kept alongside the project
 documents; this file must stay consistent with it.
 
-## What Omni is
+## What Spark is
+
+Spark was called Omni until 19 November 2026.
 
 A web dashboard with two parts built as one product:
 
@@ -24,17 +26,21 @@ configuration alone.
 
 | Layer | Folder | Job |
 | --- | --- | --- |
-| Web dashboard | `web/` | 3D core, harness workspaces, evidence drawer, Trust Centre |
-| API | `api/` | Sign-in, permissions, routes for the dashboard |
-| Orchestrator | `core/orchestrator/` | Routes questions to harnesses, merges answers, runs scenarios |
-| Harnesses | `harnesses/` | One folder per harness: data scope, tools, rules, watchlist, templates |
-| Sector packs | `packs/` | Labels, extra entities and rules per industry |
-| Read tools | `core/tools/` | Typed, read-only, permission-checked access to the data model |
-| Data model | `model/` | The single schema; the Vault |
-| Data foundation | `ingest/` | Landing, parsing, mapping, entity resolution, lineage |
+| Web dashboard | `artifacts/dashboard/` | 3D core, harness workspaces, evidence drawer, Trust Centre |
+| API | `backend/spark/api/` | Sign-in, permissions, routes for the dashboard |
+| Orchestrator | `backend/spark/orchestrator/` (Stage 6, not built yet) | Routes questions to harnesses, merges answers, runs scenarios |
+| Harnesses | `backend/spark/harness/` | One folder per harness: data scope, tools, rules, watchlist, templates |
+| Sector packs | `backend/spark/packs/` | Labels, extra entities and rules per industry |
+| Read tools | `backend/spark/tools/` | Typed, read-only, permission-checked access to the data model |
+| Data model | `backend/spark/model/schema.yaml` | The single schema; the Vault |
+| Data foundation | `backend/spark/ingest/` | Landing, parsing, mapping, entity resolution, lineage |
 
-Three things cut across every layer: the **model gateway** (`core/gateway/`),
-the **ledger** (`core/ledger/`), and the **trust rules** (`docs/TRUST_RULES.md`).
+Supporting folders: `backend/spark/db/` (the three database logins),
+`backend/spark/jobs/` (job worker), `backend/spark/sim/` (synthetic data
+generator), `backend/spark/evals/` (evaluation), `backend/migrations/`.
+
+Three things cut across every layer: the **model gateway** (`backend/spark/gateway/`),
+the **ledger** (`backend/spark/ledger/`), and the **trust rules** (`docs/TRUST_RULES.md`).
 
 ## The six universal harnesses
 
@@ -49,7 +55,8 @@ the **ledger** (`core/ledger/`), and the **trust rules** (`docs/TRUST_RULES.md`)
 
 ## Models
 
-Harnesses ask the gateway for a tier. `config/models.toml` decides the model.
+Harnesses ask the gateway for a tier. `backend/spark/gateway/config.toml`
+decides the model.
 
 | Tier | Used for | Model |
 | --- | --- | --- |
