@@ -132,8 +132,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
-  display: grid;
-  grid-template-columns: 246px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   background: var(--graphite);
   color: var(--text-body);
 }
@@ -152,21 +152,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
     linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%),
     var(--owner-landscape-photo);
 }
-.side-rail {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  padding: 18px 14px;
-  border-right: 1px solid var(--hairline);
-  background: var(--glass-page);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(22px);
-}
-.workspace-home .side-rail {
-  background: var(--glass-home);
-  backdrop-filter: blur(22px) saturate(140%);
-}
-.workspace-home .workspace-switcher { background: var(--glass-home); }
 .brand-lockup {
   display: flex;
   align-items: center;
@@ -185,67 +170,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .brand-ddg { color: var(--text-primary); font-size: 15px; font-weight: 600; }
 .brand-divider { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.24); }
 .brand-name { color: var(--text-brand); font-size: 15px; font-weight: 300; }
-.rail-brand { min-height: 40px; padding: 0 8px; }
-.workspace-switcher {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin-top: 28px;
-  padding: 11px;
-  border: 1px solid var(--hairline);
-  border-radius: 14px;
-  background: var(--glass-page);
-  text-align: left;
-}
-.workspace-avatar, .user-avatar {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  color: var(--text-primary);
-  font: 11px var(--app-font-mono);
-}
-.workspace-meta { flex: 1; min-width: 0; }
-.workspace-meta strong, .workspace-meta span { display: block; }
-.workspace-meta strong { color: var(--text-primary); font-size: 13px; font-weight: 500; }
-.workspace-meta span { margin-top: 3px; color: var(--text-label); font-size: 11px; }
-.workspace-switcher svg { color: var(--text-body); }
-.section-label {
-  margin: 30px 10px 10px;
-  color: var(--text-label);
-  font: 11px var(--app-font-mono);
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
-.rail-nav { display: grid; gap: 4px; }
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  width: 100%;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text-body);
-  font-size: 13px;
-  text-align: left;
-  text-decoration: none;
-  transition: background 160ms ease, color 160ms ease;
-}
-.nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
-.nav-item.active { font-weight: 500; }
-.nav-item svg { color: inherit; }
-.side-spacer { flex: 1; }
-.rail-divider { height: 1px; margin: 14px 8px; background: var(--divider); }
-.profile-row { display: flex; align-items: center; gap: 10px; padding: 8px 8px 2px; }
-.profile-copy { flex: 1; min-width: 0; color: var(--text-primary); font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
-.profile-copy small { display: block; margin-top: 4px; color: var(--text-label); font-size: 11px; font-weight: 400; }
 .icon-button {
   display: grid;
   flex: 0 0 auto;
@@ -258,22 +182,110 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   color: var(--text-body);
 }
 .icon-button:hover { background: rgba(255, 255, 255, 0.07); color: var(--text-primary); }
-.main-area { min-width: 0; }
+.main-area { flex: 1; min-width: 0; padding-bottom: 96px; }
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 20;
   height: 62px;
-  padding: 0 28px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--divider);
+  background: rgba(20, 21, 24, 0.72);
+  backdrop-filter: blur(22px);
 }
 .workspace-home .topbar {
   background: var(--glass-home);
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(22px) saturate(140%);
 }
-.crumbs { display: flex; align-items: center; gap: 10px; color: var(--text-label); font-size: 12px; }
-.crumbs strong { color: var(--text-primary); font-weight: 500; }
+.top-brand { display: flex; align-items: center; min-height: 40px; color: inherit; text-decoration: none; }
+.sign-out-error { color: var(--text-body); font-size: 12px; }
+
+/* Bottom navigation: independent floating glass buttons. */
+.dock {
+  position: fixed;
+  z-index: 30;
+  bottom: 18px;
+  left: 50%;
+  display: flex;
+  gap: 10px;
+  max-width: calc(100vw - 28px);
+  padding: 4px;
+  overflow-x: auto;
+  transform: translateX(-50%);
+  scrollbar-width: none;
+}
+.dock-button {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 48px;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--glass-home);
+  color: var(--text-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px) saturate(140%);
+  transition: background 160ms ease, color 160ms ease;
+}
+.dock-button:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+.dock-button.active { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+.dock-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ice);
+  transform: translateX(-50%);
+}
+.dock-initials { font: 11px var(--app-font-mono); letter-spacing: 1.2px; }
+.dock-label { white-space: nowrap; }
+
+/* Home dashboard. */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 12px;
+  margin-top: 12px;
+}
+.dashboard-grid .core-frame { margin-top: 0; min-height: min(560px, calc(100dvh - 300px)); }
+.home-panel {
+  padding: 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--glass-home);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px) saturate(140%);
+}
+.workspace-list { display: grid; }
+.workspace-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  border-top: 1px solid var(--divider);
+  color: var(--text-primary);
+  font-size: 14px;
+  text-decoration: none;
+}
+.workspace-row:first-child { border-top: 0; }
+.workspace-row:hover .workspace-row-label { text-decoration: underline; text-underline-offset: 3px; }
+.workspace-row .health-state { color: var(--text-label); font: 11px var(--app-font-mono); }
 .top-actions { display: flex; align-items: center; gap: 10px; }
 .top-account { max-width: 260px; overflow: hidden; color: var(--text-label); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .content { width: min(100%, 1500px); margin: 0 auto; padding: 18px 24px; }
@@ -547,18 +559,15 @@ td { color: var(--text-body); }
 
 @keyframes breathe { from { opacity: .45; } to { opacity: 1; } }
 @media (max-width: 850px) {
-  .workspace { grid-template-columns: 210px minmax(0, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
   .content { padding: 24px 22px 32px; }
   .settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
-  .workspace { display: block; }
-  .side-rail { min-height: unset; flex-direction: row; align-items: center; justify-content: space-between; padding: 10px 14px; border-right: 0; border-bottom: 1px solid var(--hairline); }
-  .workspace-switcher, .section-label, .side-rail nav, .side-spacer, .rail-divider { display: none; }
-  .profile-row { padding: 0; }
-  .profile-copy { display: none; }
   .topbar { height: 54px; padding: 0 15px; }
-  .top-account { max-width: 150px; }
+  .top-account { display: none; }
+  .dock { bottom: 12px; gap: 8px; }
+  .dock-button { min-width: 44px; height: 44px; }
   .content { padding: 20px 14px 28px; }
   .home-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
   .core-frame { min-height: 440px; margin-top: 20px; border-radius: 17px; }
