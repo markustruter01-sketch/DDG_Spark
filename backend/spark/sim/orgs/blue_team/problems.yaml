@@ -1,0 +1,81 @@
+# Planted problems for Blue Team (docs/WORLD_BRIEF_BLUE_TEAM.md). Same kinds
+# as Corvane, different targets. Agents never read this file or the answer key.
+
+- id: track_pad_runout
+  harness: supply_logistics
+  kind: consumption_runout
+  story: Track pad sets at a remote depot will run out within weeks.
+  site: {division: Sustainment Brigade, trait: remote, index: 0}
+  item: Track pad set
+  days_to_runout: 30
+  check: {warning_days: 60}
+
+- id: spares_lead_time
+  harness: supply_logistics
+  kind: lead_time_drift
+  story: A spares supplier whose delivery times have been lengthening for a year.
+  supplier: Aldmark Fleet Parts
+  base_days: 10
+  end_days: 32
+  check: {ratio: 1.6}
+
+- id: licence_wave
+  harness: people
+  kind: expiry_cluster
+  story: Heavy vehicle licences at one base expire just before a major exercise.
+  site: {division: 1st Brigade, index: 0}
+  skill: Heavy vehicle licence
+  activity: {name: Exercise Northern Gale, kind: Exercise, starts_in_days: 60, days: 21}
+  expiring_share: 0.4
+  min_holders: 14
+  check: {min_share: 0.9}
+
+- id: mechanic_turnover
+  harness: people
+  kind: turnover_rise
+  story: Vehicle mechanics leaving faster at remote bases.
+  role: Vehicle mechanic
+  trait: remote
+  factor: 3
+  check: {ratio: 2.0, min_leavers: 5}
+
+- id: recovery_clash
+  harness: operations
+  kind: resource_double_booking
+  story: An exercise needs a recovery section and a crane truck already booked by two other activities.
+  site: {division: Training Command, index: 0}
+  activity: {name: Exercise Iron Harvest, kind: Exercise, starts_in_days: 40, days: 30}
+  resources: [Recovery section, Crane truck CT-1]
+  competing: 2
+  check: {max_overlap: 2}
+
+- id: garrison_overspend
+  harness: finance
+  kind: split_overspend
+  story: A garrison services contract running over budget across three cost centres.
+  contract: Garrison maintenance services
+  ratio: 1.35
+  check: {ratio: 1.25}
+
+- id: coastal_generator_failures
+  harness: assets
+  kind: failure_rate_by_trait
+  story: One generator model failing at twice the rate at coastal bases.
+  model: GEN-60
+  trait: coastal
+  factor: 2.0
+  years: 5
+  check: {ratio: 1.8, min_failures: 10}
+
+- id: purifier_fault
+  harness: risk_compliance
+  kind: same_fault_reports
+  story: Three reports from different bases describe the same water purifier fault.
+  model: WPU-3
+  sites: 3
+  within_days: 120
+  wording:
+    - "{model} output dropped to a trickle; pre-filter housing cracked and leaking."
+    - "Water point crew reported the {model} losing pressure. Found the pre-filter housing split."
+    - "{model} shut down on low pressure. Cracked pre-filter housing replaced from stock."
+  check: {min_sites: 3, window_days: 365}

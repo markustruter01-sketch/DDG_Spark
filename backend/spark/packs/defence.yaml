@@ -1,6 +1,7 @@
-# Defence pack: labels for a land force.
-# Stub. Filled in at Stage 2 when Blue Team is generated. It exists now so that
-# nothing defence-specific is ever tempted into core code.
+# Defence pack: labels and thresholds for a land force.
+# First used for Blue Team (docs/WORLD_BRIEF_BLUE_TEAM.md). A pack may relabel
+# and add; it may not change or remove anything in backend/spark/model/schema.yaml.
+# Rules are plain numbers so an administrator can tune them.
 name: defence
 harnesses:
   supply_logistics: Sustainment
@@ -15,3 +16,8 @@ entities:
   skill: Qualification
   activity: Operation
   event: Report
+rules:
+  stockout_warning_days: 60
+  certification_expiry_warning_days: 90
+  minimum_certified_share: 0.9
+  availability_floor: 0.85

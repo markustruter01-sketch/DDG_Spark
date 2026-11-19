@@ -7,9 +7,9 @@ All data is synthetic. The initial fictional organisation is Corvane Group, with
 ## Stage and scope
 
 - Work on the current stage only. Do not start a later stage. If an instruction is unclear, stop and ask.
-- Current target: Stage 1 (Walking skeleton).
-- Stage 1 is one end-to-end synthetic-data question path with traceable sources, read-only agent tools, a gateway-routed harness, citations and a ledger.
-- Stage 1 excludes other harnesses, orchestration, entity resolution, AI-proposed mappings, scanned documents, charts, maps, voice, and changes to or visual polish of the 3D core.
+- Current target: Stage 2 (Synthetic organisations). Instructions: `docs/stages/STAGE_2.md`.
+- Stage 2 makes source files only: Corvane's 20-year archive and Blue Team, each with planted problems, an answer key and plain-code recovery checks. Command: `cd backend && uv run python -m spark.sim.build --org corvane --size small`.
+- Stage 2 excludes loading into the database, entity resolution, mappings, scanned PDFs, new harnesses, AI calls and dashboard changes.
 
 ## Rules for every stage
 
@@ -121,5 +121,6 @@ Spark is a Digital Dynamics Group (DDG) product. Follow these rules for all dash
 - API routes and sessions: `backend/spark/api/`.
 - Dashboard: `artifacts/dashboard/`.
 - Model gateway: `backend/spark/gateway/`; only this package may name or call model providers.
+- AI providers and models: `backend/spark/gateway/config.toml`. A provider connects when its key is in Replit Secrets (names: `GROQ_API_KEY`, `GOOGLE_GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). The active profile is `free` (Groq and Gemini free tiers) during development; set `SPARK_MODEL_PROFILE=claude` to switch. Check connections by hand with `cd backend && uv run python -m spark.gateway.smoke` (real calls; tests never make them).
 - Sector packs: YAML files in `backend/spark/packs/`; the dashboard consumes labels from the API.
 - Do not keep a second API or database implementation. The Express server, Drizzle library and generated Zod package have been removed. The former API artifact's Replit metadata remains without a service so the existing registry entry is not edited outside Replit's artifact tooling.

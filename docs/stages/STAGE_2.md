@@ -1,10 +1,13 @@
 # Stage 2: Synthetic organisations
 
+> All tasks built 19–20 November 2026. Report: `reports/STAGE_2_REPORT.md`.
+> Gate item 6 is confirmed in Replit after merge.
+
 ## Goal
 
 One command and a seed produce Corvane Group's 20-year archive as the messy
-source files a real company would hand over. Six planted problems are hidden
-in it, each with an answer key, and plain code (no AI) proves each one can
+source files a real company would hand over. Eight planted problems (the
+world brief's list) are hidden in it, each with an answer key, and plain code (no AI) proves each one can
 be found. Then a second, smaller organisation, Blue Team, is produced from a
 second configuration with no change to the generator code.
 
@@ -34,9 +37,11 @@ and `docs/WORLD_BRIEF_CORVANE.md`. The Stage 1 sample generator is
 4. **Everything from configuration.** Organisation facts, source systems,
    mess and planted problems live in YAML under `backend/spark/sim/orgs/`.
    No Corvane or defence word appears in generator code.
-5. **Answer keys are separate.** Each organisation has an answer key file
-   that names every planted problem, the records involved and the expected
-   finding. Agents never read it; only evaluation does.
+5. **Answer keys are separate.** Each organisation's planted problems are
+   defined in `orgs/<org>/problems.yaml`. The build writes the answer key
+   (every planted problem, the records involved and the expected finding) to
+   `generated-artifacts/<org>/<size>-answer-key.yaml`, outside the archive
+   folder. Agents never read either; only evaluation does.
 
 ## Tasks
 
@@ -49,9 +54,9 @@ and `docs/WORLD_BRIEF_CORVANE.md`. The Stage 1 sample generator is
    table: finance ledgers (two generations), HR (old and new), maintenance
    (three), inventory and procurement, operations, legal and risk (text
    documents only), site register.
-4. **Planted problems.** The six in the world brief, one per harness, each
-   written into the source data and recorded in
-   `orgs/corvane/answer_key.yaml`.
+4. **Planted problems.** The eight in the world brief (two each for Supply
+   and People, one each for the other four harnesses), written into the
+   source data and recorded in the answer key.
 5. **Recovery checks.** `backend/spark/sim/recover.py` finds each planted
    problem from the generated files with plain code, and reports found or not
    found against the answer key.
@@ -75,7 +80,7 @@ harnesses, AI calls, dashboard changes.
 
 1. `uv run python -m spark.sim.build --org corvane --size small` run twice
    with the same seed gives identical files (checksums printed).
-2. The recovery checks report all six Corvane problems found.
+2. The recovery checks report all eight Corvane problems found.
 3. The same command with `--org blue_team` produces Blue Team and its
    recovery checks all pass, with no generator code changed between the two.
 4. A search of `backend/spark/sim/*.py` finds no Corvane, defence or other
