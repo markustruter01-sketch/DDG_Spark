@@ -529,6 +529,11 @@ td { color: var(--text-body); }
 .evidence-fields dt { color: var(--text-label); font: 10px var(--app-font-mono); overflow-wrap: anywhere; }
 .evidence-fields dd { margin: 0; color: var(--text-body); font-size: 12px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .raw-source { max-height: 40vh; margin: 0; padding: 12px; overflow: auto; border: 1px solid var(--hairline); border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: var(--text-body); font: 11px/1.5 var(--app-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mapping-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 110px 150px; width: 100%; padding: 0 16px; border-left: 0; border-right: 0; border-bottom: 0; background: transparent; text-align: left; cursor: pointer; }
+.mapping-row:hover { background: rgba(255, 255, 255, 0.04); }
+.mapping-select { width: 100%; min-height: 32px; padding: 4px 8px; border: 1px solid var(--hairline); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); font: 12px var(--app-font-mono); }
+.mapping-select option { background: var(--night); }
+@media (max-width: 720px) { .mapping-row { grid-template-columns: minmax(0, 1fr) auto; } .mapping-row > :nth-child(2), .mapping-row > :nth-child(3) { display: none; } }
 
 .sign-in-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; color: var(--text-body); }
 .sign-in-card {

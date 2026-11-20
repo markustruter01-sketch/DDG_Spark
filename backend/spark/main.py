@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from spark.api.auth import ensure_admin_account
 from spark.api.auth import router as auth_router
+from spark.api.ingest import router as ingest_router
 from spark.api.routes import router as foundation_router
 from spark.api.stage1 import router as stage1_router
 from spark.gateway.config import load_config
@@ -58,6 +59,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(foundation_router)
 app.include_router(stage1_router)
+app.include_router(ingest_router)
 
 if PUBLIC_DIR.exists():
     app.mount(

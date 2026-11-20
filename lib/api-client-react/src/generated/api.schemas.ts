@@ -4,6 +4,21 @@
  * Api
  * OpenAPI spec version: 0.1.0
  */
+export type ApproveMappingFields = {[key: string]: string};
+
+export type ApproveMappingRefs = {[key: string]: string};
+
+export interface ApproveMapping {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  entity: string;
+  fields?: ApproveMappingFields;
+  refs?: ApproveMappingRefs;
+  same_folder?: boolean;
+}
+
 export interface AskRequest {
   /**
      * @minLength 1
@@ -16,6 +31,11 @@ export interface AskRequest {
      */
   question: string;
   deep_think?: boolean;
+}
+
+export interface EntityFields {
+  name: string;
+  fields: string[];
 }
 
 export type ValidationErrorCtx = { [key: string]: unknown };
@@ -47,6 +67,22 @@ export interface HealthResponse {
   database: string;
   extensions: HealthResponseExtensions;
   gateway: HealthResponseGateway;
+}
+
+export type MappingVersionFields = {[key: string]: string};
+
+export type MappingVersionRefs = {[key: string]: string};
+
+export interface MappingVersion {
+  version: number;
+  entity: string | null;
+  fields: MappingVersionFields;
+  refs: MappingVersionRefs;
+  confidence: number;
+  reasons: string[];
+  proposed_by: string;
+  status: string;
+  decided_at: string | null;
 }
 
 export interface TierStatus {
@@ -105,6 +141,36 @@ export interface SignInRequest {
      * @maxLength 1024
      */
   password: string;
+}
+
+export interface SourceFile {
+  id: string;
+  archive: string;
+  path: string;
+  source_system: string;
+  format: string;
+  records: number;
+  first_date: string | null;
+  last_date: string | null;
+  mapping: MappingVersion | null;
+}
+
+export type SourceFileDetailSampleItem = {[key: string]: string};
+
+export interface SourceFileDetail {
+  id: string;
+  archive: string;
+  path: string;
+  source_system: string;
+  format: string;
+  records: number;
+  first_date: string | null;
+  last_date: string | null;
+  mapping: MappingVersion | null;
+  columns: string[];
+  same_folder_files: number;
+  sample: SourceFileDetailSampleItem[];
+  history: MappingVersion[];
 }
 
 export type AskApiAskPost200 = { [key: string]: unknown };

@@ -10,10 +10,10 @@ def test_yaml_is_the_single_source_for_entities_and_tables() -> None:
     assert schema_counts() == {
         "entities": 21,
         "system_tables": 5,
-        "support_tables": 2,
+        "support_tables": 4,
     }
     metadata = build_metadata()
-    assert len(metadata.tables) == 28
+    assert len(metadata.tables) == 30
     common = set(load_schema()["common_entity_fields"])
     for name in load_schema()["entities"]:
         assert common.issubset(metadata.tables[name].columns.keys())

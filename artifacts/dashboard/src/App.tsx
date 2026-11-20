@@ -20,7 +20,8 @@ import {
   usePackApiPackGet,
   useSessionInfoApiAuthSessionGet,
 } from '@workspace/api-client-react';
-import { Grid2X2, LogOut, Settings2 } from 'lucide-react';
+import { Grid2X2, LogOut, Settings2, Waypoints } from 'lucide-react';
+import MappingsPage from '@/pages/mappings';
 import {
   Link,
   Redirect,
@@ -104,6 +105,7 @@ function DockNav({ location }: { location: string }) {
       label: harness.label,
       short: initials(harness.label),
     })),
+    { href: '/mappings', label: 'Mappings', short: 'Mappings', icon: <Waypoints size={17} aria-hidden="true" /> },
     { href: '/settings', label: 'Settings', short: 'Settings', icon: <Settings2 size={17} aria-hidden="true" /> },
   ];
 
@@ -561,6 +563,7 @@ function ProtectedRoutes({
       <Switch>
         <Route path="/" component={HomePage} />
         <Route path="/harness/:key" component={HarnessPage} />
+        <Route path="/mappings" component={MappingsPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={() => (
           <main className="page-graphite not-found-page">
