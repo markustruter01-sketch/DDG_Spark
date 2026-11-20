@@ -258,3 +258,42 @@ support_tables:
       started_at: {type: timestamp, nullable: true}
       finished_at: {type: timestamp, nullable: true}
       error: {type: text, nullable: true}
+  ingest_file:
+    fields:
+      id: {type: uuid, primary_key: true}
+      archive: {type: text, nullable: false}
+      path: {type: text, nullable: false}
+      source_system: {type: text, nullable: false}
+      format:
+        type: text
+        nullable: false
+        allowed: [table, document, unknown]
+      checksum: {type: text, nullable: false}
+      records: {type: integer, nullable: false}
+      columns: {type: json, nullable: false}
+      date_columns: {type: json, nullable: false}
+      first_date: {type: date, nullable: true}
+      last_date: {type: date, nullable: true}
+      sample: {type: json, nullable: false}
+      catalogued_at: {type: timestamp, nullable: false}
+  ingest_mapping:
+    fields:
+      id: {type: uuid, primary_key: true}
+      file_id: {type: uuid, nullable: false, references: ingest_file.id}
+      version: {type: integer, nullable: false}
+      entity: {type: text, nullable: true}
+      fields: {type: json, nullable: false}
+      refs: {type: json, nullable: false}
+      confidence: {type: float, nullable: false}
+      reasons: {type: json, nullable: false}
+      proposed_by:
+        type: text
+        nullable: false
+        allowed: [rules, model, person]
+      status:
+        type: text
+        nullable: false
+        allowed: [proposed, approved, superseded]
+      decided_by: {type: uuid, nullable: true, references: auth_user.id}
+      decided_at: {type: timestamp, nullable: true}
+      created_at: {type: timestamp, nullable: false}

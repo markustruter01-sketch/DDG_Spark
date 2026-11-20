@@ -24,15 +24,19 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ApproveMapping,
   AskApiAskPost200,
   AskRequest,
+  EntityFields,
   EvidenceApiEvidenceEntityRecordIdGet200,
   HTTPValidationError,
   HealthResponse,
   ModelsResponse,
   PackResponse,
   SessionResponse,
-  SignInRequest
+  SignInRequest,
+  SourceFile,
+  SourceFileDetail
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -824,4 +828,396 @@ export function useEvidenceApiEvidenceEntityRecordIdGet<TData = Awaited<ReturnTy
 
 
 
+
+export const getListFilesApiIngestFilesGetUrl = () => {
+
+
+
+
+  return `/api/ingest/files`
+}
+
+/**
+ * @summary List Files
+ */
+export const listFilesApiIngestFilesGet = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceFile[]> => {
+
+  return customFetch<SourceFile[]>(getListFilesApiIngestFilesGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFilesApiIngestFilesGetQueryKey = () => {
+    return [
+    `/api/ingest/files`
+    ] as const;
+    }
+
+
+export const getListFilesApiIngestFilesGetQueryOptions = <TData = Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFilesApiIngestFilesGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>> = ({ signal }) => listFilesApiIngestFilesGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListFilesApiIngestFilesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>>
+export type ListFilesApiIngestFilesGetQueryError = ErrorType<unknown>
+
+
+export function useListFilesApiIngestFilesGet<TData = Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFilesApiIngestFilesGet<TData = Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFilesApiIngestFilesGet<TData = Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Files
+ */
+
+export function useListFilesApiIngestFilesGet<TData = Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listFilesApiIngestFilesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListFilesApiIngestFilesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFileApiIngestFilesFileIdGetUrl = (fileId: string,) => {
+
+
+
+
+  return `/api/ingest/files/${fileId}`
+}
+
+/**
+ * @summary Get File
+ */
+export const getFileApiIngestFilesFileIdGet = async (fileId: string, options?: Parameters<typeof customFetch>[1]): Promise<SourceFileDetail> => {
+
+  return customFetch<SourceFileDetail>(getGetFileApiIngestFilesFileIdGetUrl(fileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFileApiIngestFilesFileIdGetQueryKey = (fileId: string,) => {
+    return [
+    `/api/ingest/files/${fileId}`
+    ] as const;
+    }
+
+
+export const getGetFileApiIngestFilesFileIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError = ErrorType<HTTPValidationError>>(fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFileApiIngestFilesFileIdGetQueryKey(fileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>> = ({ signal }) => getFileApiIngestFilesFileIdGet(fileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: fileId !== null && fileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFileApiIngestFilesFileIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>>
+export type GetFileApiIngestFilesFileIdGetQueryError = ErrorType<HTTPValidationError>
+
+
+export function useGetFileApiIngestFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError = ErrorType<HTTPValidationError>>(
+ fileId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFileApiIngestFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError = ErrorType<HTTPValidationError>>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFileApiIngestFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError = ErrorType<HTTPValidationError>>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get File
+ */
+
+export function useGetFileApiIngestFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError = ErrorType<HTTPValidationError>>(
+ fileId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileApiIngestFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFileApiIngestFilesFileIdGetQueryOptions(fileId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEntitiesApiIngestEntitiesGetUrl = () => {
+
+
+
+
+  return `/api/ingest/entities`
+}
+
+/**
+ * @summary Entities
+ */
+export const entitiesApiIngestEntitiesGet = async ( options?: Parameters<typeof customFetch>[1]): Promise<EntityFields[]> => {
+
+  return customFetch<EntityFields[]>(getEntitiesApiIngestEntitiesGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getEntitiesApiIngestEntitiesGetQueryKey = () => {
+    return [
+    `/api/ingest/entities`
+    ] as const;
+    }
+
+
+export const getEntitiesApiIngestEntitiesGetQueryOptions = <TData = Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getEntitiesApiIngestEntitiesGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>> = ({ signal }) => entitiesApiIngestEntitiesGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type EntitiesApiIngestEntitiesGetQueryResult = NonNullable<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>>
+export type EntitiesApiIngestEntitiesGetQueryError = ErrorType<unknown>
+
+
+export function useEntitiesApiIngestEntitiesGet<TData = Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>,
+          TError,
+          Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEntitiesApiIngestEntitiesGet<TData = Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>,
+          TError,
+          Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEntitiesApiIngestEntitiesGet<TData = Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Entities
+ */
+
+export function useEntitiesApiIngestEntitiesGet<TData = Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof entitiesApiIngestEntitiesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEntitiesApiIngestEntitiesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApproveApiIngestFilesFileIdMappingPostUrl = (fileId: string,) => {
+
+
+
+
+  return `/api/ingest/files/${fileId}/mapping`
+}
+
+/**
+ * @summary Approve
+ */
+export const approveApiIngestFilesFileIdMappingPost = async (fileId: string,
+    approveMapping: ApproveMapping, options?: Parameters<typeof customFetch>[1]): Promise<SourceFileDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SourceFileDetail>(getApproveApiIngestFilesFileIdMappingPostUrl(fileId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(approveMapping)
+  }
+);}
+
+
+
+
+
+export const getApproveApiIngestFilesFileIdMappingPostMutationKey = () => ['approveApiIngestFilesFileIdMappingPost'] as const;
+
+export const getApproveApiIngestFilesFileIdMappingPostMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>, TError,ApproveApiIngestFilesFileIdMappingPostMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>, TError,ApproveApiIngestFilesFileIdMappingPostMutationVariables, TContext> => {
+
+const mutationKey = getApproveApiIngestFilesFileIdMappingPostMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>, ApproveApiIngestFilesFileIdMappingPostMutationVariables> = (props) => {
+          const {fileId,data} = props ?? {};
+
+          return  approveApiIngestFilesFileIdMappingPost(fileId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveApiIngestFilesFileIdMappingPostMutationResult = NonNullable<Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>>
+    export type ApproveApiIngestFilesFileIdMappingPostMutationBody = BodyType<ApproveMapping>
+    export type ApproveApiIngestFilesFileIdMappingPostMutationError = ErrorType<HTTPValidationError>
+    export type ApproveApiIngestFilesFileIdMappingPostMutationVariables = {fileId: string;data: BodyType<ApproveMapping>}
+
+    /**
+ * @summary Approve
+ */
+export const useApproveApiIngestFilesFileIdMappingPost = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>, TError,ApproveApiIngestFilesFileIdMappingPostMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveApiIngestFilesFileIdMappingPost>>,
+        TError,
+        ApproveApiIngestFilesFileIdMappingPostMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveApiIngestFilesFileIdMappingPostMutationOptions(options), queryClient);
+    }
 

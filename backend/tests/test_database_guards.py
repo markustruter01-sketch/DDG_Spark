@@ -128,7 +128,16 @@ def test_agent_cannot_switch_to_platform_or_owner() -> None:
 
 @pytest.mark.parametrize(
     "table",
-    ["auth_user", "job", "ledger", "egress_log", "source", "raw_record"],
+    [
+        "auth_user",
+        "job",
+        "ledger",
+        "egress_log",
+        "source",
+        "raw_record",
+        "ingest_file",
+        "ingest_mapping",
+    ],
 )
 def test_agent_cannot_read_platform_or_audit_tables(table: str) -> None:
     _expect_permission_error(agent_engine(), f"SELECT * FROM public.{table} LIMIT 1")
